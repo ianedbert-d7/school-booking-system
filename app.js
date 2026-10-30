@@ -200,7 +200,14 @@ async function sendMagicLink() {
     alert('Success! Check your email inbox for your secure login link.');
   }
 }
+// 1. Check if user is logged in
+  const { data: { session } } = await supabaseClient.auth.getSession();
 
+  if (!session || !currentUserEmail) {
+    alert("Authentication Required: Please sign in with your school email to book.");
+    return; // Stops the function right here!
+  }
+  
 async function saveBooking() {
   // Check if a user session exists
   const { data: { session } } = await supabaseClient.auth.getSession();
