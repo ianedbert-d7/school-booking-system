@@ -200,33 +200,30 @@ async function sendMagicLink() {
     alert('Success! Check your email inbox for your secure login link.');
   }
 }
-// 1. Check if user is logged in
+
+// Make sure the word 'async' is right before 'function'
+async function saveBooking() {
+  
+  // 1. Check if user is logged in
   const { data: { session } } = await supabaseClient.auth.getSession();
 
   if (!session || !currentUserEmail) {
     alert("Authentication Required: Please sign in with your school email to book.");
     return; // Stops the function right here!
   }
-  
-async function saveBooking() {
-  // Check if a user session exists
-  const { data: { session } } = await supabaseClient.auth.getSession();
 
-  if (!session || !currentUserEmail) {
-    alert("Authentication Required: Please log in with your official school email to create or modify bookings.");
-    return;
-  }
-
-  // Proceed with existing booking insert logic...
+  // 2. Your existing Supabase insert code goes right here...
   const { error } = await supabaseClient
     .from('bookings')
-    .insert([{
-      resource_id: resourceId,
-      date: selectedDate,
-      title: title,
-      user_email: currentUserEmail,
-      // ... your other fields
-    }]);
+    .insert([
+      {
+        resource_id: selectedResourceId,
+        date: selectedDate,
+        title: document.getElementById('bookingTitle').value,
+        user_email: currentUserEmail,
+        // ... rest of your fields
+      }
+    ]);
 
   if (error) {
     console.error("Error saving booking:", error.message);
