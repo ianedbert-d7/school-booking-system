@@ -18,7 +18,7 @@ const END_HOUR = 17; // 5 PM
 const INTERVAL_MINS = 15;
 const TOTAL_SLOTS = ((END_HOUR - START_HOUR) * 60) / INTERVAL_MINS;
 
-let currentRole = 'user'; // 'user' | 'admin'
+
 let selectedDate = new Date().toISOString().split('T')[0];
 
 let resources = [];
@@ -84,6 +84,26 @@ async function loadDataFromSupabase() {
     console.error('Error loading data from Supabase:', err.message);
     alert('Failed to connect to Supabase database. Check your API credentials.');
   }
+}
+// Global Role State
+let currentRole = 'user'; // default to standard user
+let currentUserEmail = ''; // track active staff email
+
+function handleRoleChange() {
+  const roleSelect = document.getElementById('userRoleSelect');
+  currentRole = roleSelect.value;
+  
+  // Update UI permissions visually
+  updateRoleUI();
+  // Re-render grid to reflect role-based controls (e.g. edit/delete buttons)
+  renderGrid();
+}
+
+function updateRoleUI() {
+  const adminElements = document.querySelectorAll('.admin-only');
+  adminElements.forEach(el => {
+    el.style.display = (currentRole === 'admin') ? 'block' : 'none';
+  });
 }
 
 function generateTimeLabels() {
@@ -325,12 +345,12 @@ async function saveBooking() {
   try {
     if (bookingId) {
       // Update existing booking in Supabase
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('bookings')
         .update({
           resource_id: resourceId,
           date: selectedDate,
-          title,
+          title: title,
           user_name: user,
           user_email: email,
           start_slot: startSlot,
@@ -341,7 +361,7 @@ async function saveBooking() {
       if (error) throw error;
     } else {
       // Insert new booking into Supabase
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('bookings')
         .insert([{
           resource_id: resourceId,
@@ -369,18 +389,36 @@ async function deleteBooking() {
   const bookingId = document.getElementById('bookingId').value;
   if (!bookingId) return;
 
-  const b = bookings.find(item => item.id === bookingId);
+  const booking = bookings.find(item => item.id === bookingId);
+  if (!booking) return;
+
+  // Role Validation Check
+  const isOwner = currentUserEmail && (booking.email.toLowerCase() === currentUserEmail.toLowerCase());
+  const isAdmin = currentRole === 'admin';
+
+  if (!isAdmin && !isOwner) {
+    alert('Permission Denied: You can only delete or cancel your own bookings.');
+    return;
+  }
 
   try {
-    const { error } = await supabaseClient.from('bookings').delete().eq('id', bookingId);
+    const { error } = await supabaseClient
+      .from('bookings')
+      .delete()
+      .eq('id', bookingId);
+
     if (error) throw error;
 
-    if (b && b.email) {
-      sendSimulatedEmail(b.email, 'Booking Cancellation', `Your booking "${b.title}" for ${selectedDate} has been cancelled.`);
+    if (booking.email) {
+      sendSimulatedEmail(
+        booking.email, 
+        'Booking Cancellation', 
+        `Your booking "${booking.title}" for ${selectedDate} has been cancelled.`
+      );
     }
 
     closeBookingModal();
-    await loadDataFromSupabase(); // Refresh live data
+    await loadDataFromSupabase();
   } catch (err) {
     console.error('Error deleting booking:', err.message);
     alert('Failed to delete booking.');
