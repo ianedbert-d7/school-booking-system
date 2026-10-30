@@ -7,6 +7,22 @@
   <link rel="stylesheet" href="styles.css">
   
 </head>
+<!-- Add this near your top navigation or header -->
+<div id="authContainer" class="auth-bar" style="padding: 10px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
+  
+  <!-- View when logged out -->
+  <div id="loggedOutView">
+    <input type="email" id="loginEmailInput" placeholder="staff@yourschool.edu" style="padding: 6px; border-radius: 4px; border: 1px solid #ccc; width: 220px;" />
+    <button onclick="sendMagicLink()" style="padding: 6px 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Send Magic Link</button>
+  </div>
+
+  <!-- View when logged in -->
+  <div id="loggedInView" style="display: none; align-items: center; gap: 10px;">
+    <span style="font-size: 14px;">Logged in as: <strong id="userDisplayEmail"></strong> (<span id="userDisplayRole" style="color: #007bff; text-transform: uppercase;"></span>)</span>
+    <button onclick="handleSignOut()" style="padding: 6px 12px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Sign Out</button>
+  </div>
+
+</div>
 <body>
 
   <header>

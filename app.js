@@ -122,7 +122,120 @@ function generateTimeLabels() {
     container.appendChild(label);
   }
 }
+// List of official admin staff emails
+const ADMIN_EMAILS = [
+  'ian.dermawan@sph.ac.id',
+  'riana.haryanto@sph.ac.id',
+  'ferdinand.christian@sph.ac.id'
+];
 
+// Verify school domain and determine role
+function setRoleFromEmail(userEmail) {
+  const schoolDomain = '@sph.ac.id'; // Replace with your actual domain
+
+  if (!userEmail.toLowerCase().endsWith(schoolDomain)) {
+    alert(`Access restricted. Please sign in using your official ${schoolDomain} email.`);
+    return false;
+  }
+
+  // Assign role based on email match
+  if (ADMIN_EMAILS.includes(userEmail.toLowerCase())) {
+    currentRole = 'admin';
+  } else {
+    currentRole = 'user';
+  }
+
+  currentUserEmail = userEmail;
+  updateRoleUI();
+  return true;
+}
+
+// ==========================================
+// AUTHENTICATION & ROLE CONFIGURATION
+// ==========================================
+const SCHOOL_DOMAIN = '@sph.ac.id'; // Change this to your actual school domain
+
+
+// Initialize Auth State Listener on Page Load
+document.addEventListener('DOMContentLoaded', () => {
+  checkAuthSession();
+});
+
+async function checkAuthSession() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session) {
+    handleUserSession(session.user);
+  }
+
+  // Listen for login/logout state changes
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (session) {
+      handleUserSession(session.user);
+    } else {
+      handleSignedOut();
+    }
+  });
+}
+
+async function sendMagicLink() {
+  const emailInput = document.getElementById('loginEmailInput');
+  const email = emailInput.value.trim().toLowerCase();
+
+  if (!email.endsWith(SCHOOL_DOMAIN)) {
+    alert(`Access denied. Please use your official school email ending in ${SCHOOL_DOMAIN}`);
+    return;
+  }
+
+  const { error } = await supabaseClient.auth.signInWithOtp({
+    email: email,
+    options: {
+      emailRedirectTo: window.location.origin // Redirects back to your live site or localhost
+    }
+  });
+
+  if (error) {
+    console.error('Magic link error:', error.message);
+    alert('Failed to send magic link: ' + error.message);
+  } else {
+    alert('Success! Check your email inbox for your secure login link.');
+  }
+}
+
+function handleUserSession(user) {
+  currentUserEmail = user.email;
+
+  // Determine Role based on Admin email list
+  if (ADMIN_EMAILS.includes(currentUserEmail.toLowerCase())) {
+    currentRole = 'admin';
+  } else {
+    currentRole = 'user';
+  }
+
+  // Update UI Views
+  document.getElementById('loggedOutView').style.display = 'none';
+  document.getElementById('loggedInView').style.display = 'flex';
+  document.getElementById('userDisplayEmail').innerText = currentUserEmail;
+  document.getElementById('userDisplayRole').innerText = currentRole;
+
+  updateRoleUI();
+  renderGrid();
+}
+
+function handleSignedOut() {
+  currentUserEmail = '';
+  currentRole = 'user';
+
+  document.getElementById('loggedOutView').style.display = 'block';
+  document.getElementById('loggedInView').style.display = 'none';
+
+  updateRoleUI();
+  renderGrid();
+}
+
+async function handleSignOut() {
+  const { error } = await supabaseClient.auth.signOut();
+  if (error) console.error('Error signing out:', error.message);
+}
 function formatTime(h, m) {
   const period = h >= 12 ? 'PM' : 'AM';
   const displayHour = h % 12 === 0 ? 12 : h % 12;
