@@ -208,37 +208,78 @@ async function saveBooking() {
 
   if (!session || !currentUserEmail) {
     alert("Authentication Required: Please sign in with your school email to book.");
-    return; // Stops the function right here!
+    return;
   }
 
   const bookingId = document.getElementById('bookingId').value;
   const resourceId = document.getElementById('modalResource').value;
   const title = document.getElementById('modalTitleInput').value.trim() || 'Untitled Booking';
   const user = document.getElementById('modalUser').value.trim() || 'Anonymous Staff';
-  const email = currentUserEmail; // Automatically use the authenticated user's email
+  const email = currentUserEmail; 
   const startSlot = parseInt(document.getElementById('modalStartTime').value);
   const endSlot = parseInt(document.getElementById('modalEndTime').value);
+  const frequency = document.getElementById('repeatFrequency').value;
 
   if (startSlot >= endSlot) {
     alert('End time must be after start time!');
     return;
   }
 
-  // Check collision locally before saving
-  const hasCollision = bookings.some(b => {
-    if (bookingId && b.id === bookingId) return false;
-    if (b.resourceId !== resourceId || b.date !== selectedDate) return false;
-    return (startSlot < b.endSlot && endSlot > b.startSlot);
-  });
+  // Generate list of dates to book
+  let datesToBook = [selectedDate];
 
-  if (hasCollision) {
-    alert('This space is already booked during that time slot.');
-    return;
+  if (frequency !== 'none' && !bookingId) {
+    const endType = document.getElementById('repeatEndType').value;
+    let maxCount = parseInt(document.getElementById('repeatCount').value) || 1;
+    let endDateStr = document.getElementById('repeatEndDate').value;
+    let endDate = endDateStr ? new Date(endDateStr) : null;
+
+    let currentDateObj = new Date(selectedDate);
+    let count = 1;
+
+    while (true) {
+      if (endType === 'count' && count >= maxCount) break;
+
+      // Increment date based on frequency
+      if (frequency === 'daily') {
+        currentDateObj.setDate(currentDateObj.getDate() + 1);
+      } else if (frequency === 'weekly') {
+        currentDateObj.setDate(currentDateObj.getDate() + 7);
+      } else if (frequency === 'monthly') {
+        currentDateObj.setMonth(currentDateObj.getMonth() + 1);
+      }
+
+      let dateString = currentDateObj.toISOString().split('T')[0];
+
+      if (endType === 'date' && endDate && currentDateObj > endDate) {
+        break;
+      }
+
+      // Safety cap to prevent browser freeze (max 100 occurrences)
+      if (count >= 100) break;
+
+      datesToBook.push(dateString);
+      count++;
+    }
+  }
+
+  // Check collisions across all targeted dates
+  for (let d of datesToBook) {
+    const hasCollision = bookings.some(b => {
+      if (bookingId && b.id === bookingId) return false;
+      if (b.resourceId !== resourceId || b.date !== d) return false;
+      return (startSlot < b.endSlot && endSlot > b.startSlot);
+    });
+
+    if (hasCollision) {
+      alert(`Collision detected on ${d}. This space is already booked during that time slot. Recurring booking cancelled.`);
+      return;
+    }
   }
 
   try {
     if (bookingId) {
-      // Update existing booking in Supabase
+      // Single edit mode
       const { error } = await supabaseClient
         .from('bookings')
         .update({
@@ -254,28 +295,35 @@ async function saveBooking() {
 
       if (error) throw error;
     } else {
-      // Insert new booking into Supabase
+      // Bulk insert for recurring bookings
+      const recordsToInsert = datesToBook.map(d => ({
+        resource_id: resourceId,
+        date: d,
+        title: title,
+        user_name: user,
+        user_email: email,
+        start_slot: startSlot,
+        end_slot: endSlot
+      }));
+
       const { error } = await supabaseClient
         .from('bookings')
-        .insert([{
-          resource_id: resourceId,
-          date: selectedDate,
-          title,
-          user_name: user,
-          user_email: email,
-          start_slot: startSlot,
-          end_slot: endSlot
-        }]);
+        .insert(recordsToInsert);
 
       if (error) throw error;
-      sendSimulatedEmail(email, 'Booking Confirmation', `Your booking for "${title}" on ${selectedDate} from ${getTimeString(startSlot)} to ${getTimeString(endSlot)} is confirmed.`);
+
+      sendSimulatedEmail(
+        email, 
+        'Recurring Booking Confirmation', 
+        `Successfully booked "${title}" for ${datesToBook.length} sessions starting ${selectedDate} (${frequency.toUpperCase()} repetition).`
+      );
     }
 
     closeBookingModal();
-    await loadDataFromSupabase(); // Refresh live data
+    await loadDataFromSupabase();
   } catch (err) {
-    console.error('Error saving booking:', err.message);
-    alert('Failed to save booking to database.');
+    console.error('Error saving recurring bookings:', err.message);
+    alert('Failed to save bookings to database.');
   }
 }
 
@@ -507,7 +555,17 @@ function closeBookingModal() {
   document.getElementById('bookingModal').classList.remove('active');
 }
 
+function toggleRepeatOptions() {
+  const freq = document.getElementById('repeatFrequency').value;
+  const container = document.getElementById('repeatSettingsContainer');
+  container.style.display = freq === 'none' ? 'none' : 'flex';
+}
 
+function toggleEndType() {
+  const endType = document.getElementById('repeatEndType').value;
+  document.getElementById('repeatCountWrapper').style.display = endType === 'count' ? 'block' : 'none';
+  document.getElementById('repeatDateWrapper').style.display = endType === 'date' ? 'block' : 'none';
+}
 
 async function deleteBooking() {
   const bookingId = document.getElementById('bookingId').value;
