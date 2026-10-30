@@ -201,6 +201,37 @@ async function sendMagicLink() {
   }
 }
 
+async function saveBooking() {
+  // Check if a user session exists
+  const { data: { session } } = await supabaseClient.auth.getSession();
+
+  if (!session || !currentUserEmail) {
+    alert("Authentication Required: Please log in with your official school email to create or modify bookings.");
+    return;
+  }
+
+  // Proceed with existing booking insert logic...
+  const { error } = await supabaseClient
+    .from('bookings')
+    .insert([{
+      resource_id: resourceId,
+      date: selectedDate,
+      title: title,
+      user_email: currentUserEmail,
+      // ... your other fields
+    }]);
+
+  if (error) {
+    console.error("Error saving booking:", error.message);
+    alert("Failed to save booking: " + error.message);
+    return;
+  }
+
+  alert("Booking saved successfully!");
+  closeBookingModal();
+  await loadDataFromSupabase();
+}
+
 function handleUserSession(user) {
   currentUserEmail = user.email;
 
