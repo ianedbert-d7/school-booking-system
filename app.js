@@ -203,7 +203,6 @@ async function sendMagicLink() {
 
 // Make sure the word 'async' is right before 'function'
 async function saveBooking() {
-  
   // 1. Check if user is logged in
   const { data: { session } } = await supabaseClient.auth.getSession();
 
@@ -212,28 +211,72 @@ async function saveBooking() {
     return; // Stops the function right here!
   }
 
-  // 2. Your existing Supabase insert code goes right here...
-  const { error } = await supabaseClient
-    .from('bookings')
-    .insert([
-      {
-        resource_id: selectedResourceId,
-        date: selectedDate,
-        title: document.getElementById('bookingTitle').value,
-        user_email: currentUserEmail,
-        // ... rest of your fields
-      }
-    ]);
+  const bookingId = document.getElementById('bookingId').value;
+  const resourceId = document.getElementById('modalResource').value;
+  const title = document.getElementById('modalTitleInput').value.trim() || 'Untitled Booking';
+  const user = document.getElementById('modalUser').value.trim() || 'Anonymous Staff';
+  const email = currentUserEmail; // Automatically use the authenticated user's email
+  const startSlot = parseInt(document.getElementById('modalStartTime').value);
+  const endSlot = parseInt(document.getElementById('modalEndTime').value);
 
-  if (error) {
-    console.error("Error saving booking:", error.message);
-    alert("Failed to save booking: " + error.message);
+  if (startSlot >= endSlot) {
+    alert('End time must be after start time!');
     return;
   }
 
-  alert("Booking saved successfully!");
-  closeBookingModal();
-  await loadDataFromSupabase();
+  // Check collision locally before saving
+  const hasCollision = bookings.some(b => {
+    if (bookingId && b.id === bookingId) return false;
+    if (b.resourceId !== resourceId || b.date !== selectedDate) return false;
+    return (startSlot < b.endSlot && endSlot > b.startSlot);
+  });
+
+  if (hasCollision) {
+    alert('This space is already booked during that time slot.');
+    return;
+  }
+
+  try {
+    if (bookingId) {
+      // Update existing booking in Supabase
+      const { error } = await supabaseClient
+        .from('bookings')
+        .update({
+          resource_id: resourceId,
+          date: selectedDate,
+          title: title,
+          user_name: user,
+          user_email: email,
+          start_slot: startSlot,
+          end_slot: endSlot
+        })
+        .eq('id', bookingId);
+
+      if (error) throw error;
+    } else {
+      // Insert new booking into Supabase
+      const { error } = await supabaseClient
+        .from('bookings')
+        .insert([{
+          resource_id: resourceId,
+          date: selectedDate,
+          title,
+          user_name: user,
+          user_email: email,
+          start_slot: startSlot,
+          end_slot: endSlot
+        }]);
+
+      if (error) throw error;
+      sendSimulatedEmail(email, 'Booking Confirmation', `Your booking for "${title}" on ${selectedDate} from ${getTimeString(startSlot)} to ${getTimeString(endSlot)} is confirmed.`);
+    }
+
+    closeBookingModal();
+    await loadDataFromSupabase(); // Refresh live data
+  } catch (err) {
+    console.error('Error saving booking:', err.message);
+    alert('Failed to save booking to database.');
+  }
 }
 
 function handleUserSession(user) {
@@ -464,74 +507,7 @@ function closeBookingModal() {
   document.getElementById('bookingModal').classList.remove('active');
 }
 
-async function saveBooking() {
-  const bookingId = document.getElementById('bookingId').value;
-  const resourceId = document.getElementById('modalResource').value;
-  const title = document.getElementById('modalTitleInput').value.trim() || 'Untitled Booking';
-  const user = document.getElementById('modalUser').value.trim() || 'Anonymous Staff';
-  const email = document.getElementById('modalEmail').value.trim();
-  const startSlot = parseInt(document.getElementById('modalStartTime').value);
-  const endSlot = parseInt(document.getElementById('modalEndTime').value);
 
-  if (startSlot >= endSlot) {
-    alert('End time must be after start time!');
-    return;
-  }
-
-  // Check collision locally before saving
-  const hasCollision = bookings.some(b => {
-    if (bookingId && b.id === bookingId) return false;
-    if (b.resourceId !== resourceId || b.date !== selectedDate) return false;
-    return (startSlot < b.endSlot && endSlot > b.startSlot);
-  });
-
-  if (hasCollision) {
-    alert('This space is already booked during that time slot.');
-    return;
-  }
-
-  try {
-    if (bookingId) {
-      // Update existing booking in Supabase
-      const { error } = await supabaseClient
-        .from('bookings')
-        .update({
-          resource_id: resourceId,
-          date: selectedDate,
-          title: title,
-          user_name: user,
-          user_email: email,
-          start_slot: startSlot,
-          end_slot: endSlot
-        })
-        .eq('id', bookingId);
-
-      if (error) throw error;
-    } else {
-      // Insert new booking into Supabase
-      const { error } = await supabaseClient
-        .from('bookings')
-        .insert([{
-          resource_id: resourceId,
-          date: selectedDate,
-          title,
-          user_name: user,
-          user_email: email,
-          start_slot: startSlot,
-          end_slot: endSlot
-        }]);
-
-      if (error) throw error;
-      sendSimulatedEmail(email, 'Booking Confirmation', `Your booking for "${title}" on ${selectedDate} from ${getTimeString(startSlot)} to ${getTimeString(endSlot)} is confirmed.`);
-    }
-
-    closeBookingModal();
-    await loadDataFromSupabase(); // Refresh live data
-  } catch (err) {
-    console.error('Error saving booking:', err.message);
-    alert('Failed to save booking to database.');
-  }
-}
 
 async function deleteBooking() {
   const bookingId = document.getElementById('bookingId').value;
