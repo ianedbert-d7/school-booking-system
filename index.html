@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workplace Booking System</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <h1>🏫 School Space Booking</h1>
+      <div class="role-switcher">
+        <button class="role-btn active" id="roleUser" onclick="switchRole('user')">Teacher View</button>
+        <button class="role-btn" id="roleAdmin" onclick="switchRole('admin')">Admin View</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="date-picker-group">
+        <input type="date" id="datePicker">
+      </div>
+
+      <div class="filter-group">
+        <select id="typeFilter" onchange="renderGrid()">
+          <option value="ALL">All Spaces</option>
+          <option value="Meeting Room">Meeting Rooms</option>
+          <option value="Desk">Desks</option>
+          <option value="Quiet Pod">Quiet Pods</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary" onclick="openBookingModal()">+ New Booking</button>
+      <button class="btn btn-secondary" onclick="toggleOutbox()">📬 Email Log (<span id="emailCount">0</span>)</button>
+    </div>
+  </header>
+
+  <div class="schedule-container">
+    <div class="time-column">
+      <div class="time-header"></div>
+      <div class="time-slots-wrapper" id="timeColumnSlots"></div>
+    </div>
+
+    <div class="grid-viewport" id="gridViewport"></div>
+  </div>
+
+  <!-- Booking Modal -->
+  <div class="modal-overlay" id="bookingModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Book a Space</h3>
+        <button class="btn btn-secondary" style="padding: 2px 8px;" onclick="closeBookingModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="bookingId">
+        
+        <div class="form-group">
+          <label>Space / Resource</label>
+          <select id="modalResource"></select>
+        </div>
+
+        <div class="form-group">
+          <label>Title / Purpose</label>
+          <input type="text" id="modalTitleInput" placeholder="e.g. Science Dept Sync">
+        </div>
+
+        <div class="form-group">
+          <label>Reserved For (Name)</label>
+          <input type="text" id="modalUser" placeholder="e.g. Jane Doe">
+        </div>
+
+        <div class="form-group">
+          <label>User Email (for notifications)</label>
+          <input type="email" id="modalEmail" placeholder="teacher@school.edu">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Start Time</label>
+            <select id="modalStartTime"></select>
+          </div>
+          <div class="form-group">
+            <label>End Time</label>
+            <select id="modalEndTime"></select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="deleteBtn" style="display:none; color: #dc2626; border-color: #fca5a5;" onclick="deleteBooking()">Cancel Booking</button>
+        <button class="btn btn-secondary" onclick="closeBookingModal()">Close</button>
+        <button class="btn btn-primary" id="saveBookingBtn" onclick="saveBooking()">Save Booking</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Simulated Email Outbox Drawer -->
+  <div class="outbox-drawer" id="outboxDrawer">
+    <div class="outbox-header">
+      <h3>📬 Email Outbox</h3>
+      <button class="btn btn-secondary" style="padding: 2px 8px;" onclick="toggleOutbox()">✕</button>
+    </div>
+    <div class="outbox-content" id="outboxList">
+      <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">No emails sent yet.</p>
+    </div>
+  </div>
+<!-- Supabase JS Client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
