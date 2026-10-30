@@ -130,23 +130,30 @@ const ADMIN_EMAILS = [
 ];
 
 // Verify school domain and determine role
-function setRoleFromEmail(userEmail) {
-  const schoolDomain = '@sph.ac.id'; // Replace with your actual domain
+// Replace your old setRoleFromEmail or session handler check with this:
+async function verifyAndSetUserRole(userEmail) {
+  const emailLower = userEmail.toLowerCase();
 
-  if (!userEmail.toLowerCase().endsWith(schoolDomain)) {
-    alert(`Access restricted. Please sign in using your official ${schoolDomain} email.`);
+  // Query Supabase staff_roles table
+  const { data, error } = await supabaseClient
+    .from('staff_roles')
+    .select('role')
+    .eq('email', emailLower)
+    .single();
+
+  if (error || !data) {
+    // Email not found in the school database table!
+    alert("Access Denied: Your email is not registered in the school staff directory.");
+    await supabaseClient.auth.signOut(); // Force log them out
     return false;
   }
 
-  // Assign role based on email match
-  if (ADMIN_EMAILS.includes(userEmail.toLowerCase())) {
-    currentRole = 'admin';
-  } else {
-    currentRole = 'user';
-  }
-
+  // Set role based on what's stored in the database ('admin' or 'user')
+  currentRole = data.role; 
   currentUserEmail = userEmail;
+
   updateRoleUI();
+  renderGrid();
   return true;
 }
 
