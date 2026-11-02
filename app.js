@@ -452,14 +452,10 @@ function handleUserSession(user) {
 }
 
 function handleSignedOut() {
-  currentUserEmail = '';
-  currentRole = 'user';
-
-  document.getElementById('loggedOutView').style.display = 'block';
-  document.getElementById('loggedInView').style.display = 'none';
-
-  updateRoleUI();
-  renderGrid();
+  const loginView = document.getElementById('loggedOutView');
+  if (loginView) {
+    loginView.style.display = 'flex'; // Must be 'flex' to keep it centered!
+  }
 }
 
 async function handleSignOut() {
