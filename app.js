@@ -146,13 +146,19 @@ const ADMIN_EMAILS = [
 
 function showForgotPasswordView(e) {
   e.preventDefault();
-  document.getElementById('loggedOutView').style.display = 'none';
-  document.getElementById('forgotPasswordView').style.display = 'flex';
+  const loginView = document.getElementById('loggedOutView');
+  const forgotView = document.getElementById('forgotPasswordView');
+  
+  if (loginView) loginView.style.display = 'none';
+  if (forgotView) forgotView.style.display = 'flex'; // Explicitly show the block
 }
 
 function hideForgotPasswordView() {
-  document.getElementById('forgotPasswordView').style.display = 'none';
-  document.getElementById('loggedOutView').style.display = 'flex';
+  const loginView = document.getElementById('loggedOutView');
+  const forgotView = document.getElementById('forgotPasswordView');
+  
+  if (forgotView) forgotView.style.display = 'none';
+  if (loginView) loginView.style.display = 'flex'; // Bring back the login view
 }
 
 async function sendPasswordResetEmail() {
