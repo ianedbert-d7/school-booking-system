@@ -54,33 +54,19 @@
     </div>
   </div>
 
-  <header>
-    <div style="display: flex; align-items: center; gap: 15px;">
+  <header style="display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: var(--bg-surface); border-bottom: 1px solid var(--border-color);">
+    
+    <!-- Left Side: Brand & Title -->
+    <div class="brand" style="display: flex; align-items: center; gap: 12px;">
       <div style="display: flex; align-items: center; gap: 6px;">
         <span style="font-size: 0.85rem; color: #555;">Role:</span>
         <span id="userRoleBadge" style="font-size: 0.85rem; font-weight: bold; padding: 4px 8px; background: #e9ecef; border-radius: 4px; text-transform: capitalize;">User</span>
       </div>
-      
-      <!-- LOGGED IN VIEW MOVED HERE INTO HEADER -->
-      <div id="loggedInView" style="display: none; align-items: center; gap: 10px;">
-        <span style="font-size: 0.85rem;">Logged in as: <strong id="userDisplayEmail"></strong> (<span id="userDisplayRole" style="color: #007bff; text-transform: uppercase;"></span>)</span>
-        <button onclick="handleSignOut()" style="padding: 4px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Sign Out</button>
-      </div>
+      <h1 style="font-size: 1.25rem; font-weight: 700; color: var(--text-main);">SPH PV Room Bookings</h1>
     </div>
 
-<body>
-
-  <header>
-    <!-- Replace the old role dropdown/buttons in your top header with this: -->
-<div style="display: flex; align-items: center; gap: 10px;">
-  <span style="font-size: 0.85rem; color: #555;">Role:</span>
-  <span id="userRoleBadge" style="font-size: 0.85rem; font-weight: bold; padding: 4px 8px; background: #e9ecef; border-radius: 4px; text-transform: capitalize;">User</span>
-</div>
-    <div class="brand">
-      <h1>SPH PV Room Bookings</h1>
-        </div>
-
-    <div class="controls">
+    <!-- Center/Right Side: Filters & Controls -->
+    <div class="controls" style="display: flex; align-items: center; gap: 12px;">
       <div class="date-picker-group">
         <input type="date" id="datePicker">
       </div>
@@ -97,6 +83,13 @@
       <button class="btn btn-primary" onclick="openBookingModal()">+ New Booking</button>
       <button class="btn btn-secondary" onclick="toggleOutbox()">📬 Email Log (<span id="emailCount">0</span>)</button>
     </div>
+
+    <!-- Far Right: Logged in User info & Sign Out -->
+    <div id="loggedInView" style="display: none; align-items: center; gap: 10px; font-size: 0.85rem; border-left: 1px solid var(--border-color); padding-left: 15px;">
+      <span>Logged in as: <strong id="userDisplayEmail"></strong> (<span id="userDisplayRole" style="color: #007bff; text-transform: uppercase;"></span>)</span>
+      <button onclick="handleSignOut()" style="padding: 4px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Sign Out</button>
+    </div>
+
   </header>
 
   <div class="schedule-container">
