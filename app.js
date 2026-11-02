@@ -416,13 +416,7 @@ function populateTimeSelects() {
   endSelect.innerHTML = options;
 }
 
-function switchRole(role) {
-  currentRole = role;
-  document.getElementById('roleUser').classList.toggle('active', role === 'user');
-  document.getElementById('roleAdmin').classList.toggle('active', role === 'admin');
-  document.getElementById('roleAdmin').classList.toggle('admin-mode', role === 'admin');
-  renderGrid();
-}
+
 
 function renderGrid() {
   const viewport = document.getElementById('gridViewport');
