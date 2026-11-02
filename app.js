@@ -301,13 +301,13 @@ async function handleEmailPasswordLogin() {
     return;
   }
 
-  // Optional: enforce school domain constraint
   if (!email.endsWith('@sph.ac.id')) {
     alert('Access restricted to @sph.ac.id school accounts.');
     return;
   }
 
   try {
+    console.log("Attempting sign in...");
     const { data, error } = await supabaseClient.auth.signInWithPassword({
       email: email,
       password: password,
@@ -315,19 +315,23 @@ async function handleEmailPasswordLogin() {
 
     if (error) throw error;
 
-    alert('Successfully signed in!');
+    console.log("Sign in successful! Forcing modal to hide...");
 
-    // 1. HIDE THE LOGIN MODAL OVERLAY IMMEDIATELY
+    // 1. Force hide the modal using setProperty with 'important' so nothing can override it
     const loggedOutView = document.getElementById('loggedOutView');
     if (loggedOutView) {
-      loggedOutView.style.display = 'none';
+      loggedOutView.style.setProperty('display', 'none', 'important');
+      console.log("loggedOutView hidden successfully.");
+    } else {
+      console.error("Error: #loggedOutView element not found in DOM!");
     }
 
-    // 2. TRIGGER YOUR SESSION/APP SETUP FUNCTION
+    alert('Successfully signed in!');
+
+    // 2. Trigger user session or reload page to clear states
     if (typeof handleUserSession === 'function') {
       handleUserSession(data.session.user);
     } else {
-      // Fallback if your function has a different name, or just reload the app state
       window.location.reload();
     }
 
