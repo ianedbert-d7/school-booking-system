@@ -199,28 +199,39 @@ async function checkAuthSession() {
   });
 }
 
-async function sendMagicLink() {
+async function handleEmailPasswordLogin() {
   const emailInput = document.getElementById('loginEmailInput');
+  const passwordInput = document.getElementById('loginPasswordInput');
+  
   const email = emailInput.value.trim().toLowerCase();
+  const password = passwordInput.value;
 
   if (!email.endsWith(SCHOOL_DOMAIN)) {
     alert(`Access denied. Please use your official school email ending in ${SCHOOL_DOMAIN}`);
     return;
   }
 
-  const { error } = await supabaseClient.auth.signInWithOtp({
+  if (!password) {
+    alert('Please enter your password.');
+    return;
+  }
+
+  // Authenticate against Supabase Auth
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
     email: email,
-    options: {
-      emailRedirectTo: window.location.origin // Redirects back to your live site or localhost
-    }
+    password: password
   });
 
   if (error) {
-    console.error('Magic link error:', error.message);
-    alert('Failed to send magic link: ' + error.message);
-  } else {
-    alert('Success! Check your email inbox for your secure login link.');
+    console.error('Login error:', error.message);
+    alert('Login failed: ' + error.message);
+    return;
   }
+
+  // Note: Once successful, Supabase's built-in onAuthStateChange listener 
+  // (which you already have running) will automatically catch the session 
+  // and run your verifyAndSetUserRole() check!
+  alert('Successfully signed in!');
 }
 
 // Make sure the word 'async' is right before 'function'
