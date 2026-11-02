@@ -254,40 +254,26 @@ async function checkAuthSession() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (session) {
     handleUserSession(session.user);
-  }
-// Inside your checkAuthSession() or where you configure auth state changes:
-// 1. Listen for Supabase Auth State Changes
-supabaseClient.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'PASSWORD_RECOVERY') {
-    // Show the overlay
-    const loggedOutView = document.getElementById('loggedOutView');
-    if (loggedOutView) loggedOutView.style.display = 'flex';
-
-    // Switch to the NEW password input view (instead of the email request view!)
-    toggleAuthMode('update');
-  } else if (session) {
-    // Normal session active, hide login overlay
-    const loggedOutView = document.getElementById('loggedOutView');
-    if (loggedOutView) loggedOutView.style.display = 'none';
-    if (typeof handleUserSession === 'function') handleUserSession(session.user);
   } else {
-    // Signed out
-    const loggedOutView = document.getElementById('loggedOutView');
-    if (loggedOutView) loggedOutView.style.display = 'flex';
-    toggleAuthMode('login');
+    handleSignedOut();
   }
-});
 
-
-  // Listen for login/logout state changes
-  supabaseClient.auth.onAuthStateChange((event, session) => {
-    if (session) {
+  // Single unified Auth State Change listener
+  supabaseClient.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      const loggedOutView = document.getElementById('loggedOutView');
+      if (loggedOutView) loggedOutView.style.display = 'flex';
+      toggleAuthMode('update');
+    } else if (session) {
       handleUserSession(session.user);
     } else {
       handleSignedOut();
     }
   });
 }
+
+
+  
 
 async function handleEmailPasswordLogin() {
   const emailInput = document.getElementById('loginEmailInput');
@@ -463,9 +449,13 @@ function handleUserSession(user) {
     currentRole = 'user';
   }
 
-  // Update UI Views
-  document.getElementById('loggedOutView').style.display = 'flex';
-  document.getElementById('loggedInView').style.display = 'flex';
+  // Update UI Views - HIDE the login modal here!
+  const loggedOutView = document.getElementById('loggedOutView');
+  if (loggedOutView) loggedOutView.style.display = 'none'; // <-- FIXED: Set to 'none'
+
+  const loggedInView = document.getElementById('loggedInView');
+  if (loggedInView) loggedInView.style.display = 'flex';
+
   document.getElementById('userDisplayEmail').innerText = currentUserEmail;
   document.getElementById('userDisplayRole').innerText = currentRole;
 
