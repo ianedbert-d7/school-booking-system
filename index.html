@@ -15,36 +15,41 @@
 
   <!-- 1. LOGIN VIEW (Sibling A) -->
   <!-- UNIFIED AUTH CARD -->
-<div id="loggedOutView" style="display: flex; flex-direction: column; gap: 10px; max-width: 320px; margin: 40px auto; padding: 24px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid #e2e8f0;">
+<!-- FULL-SCREEN AUTH OVERLAY CONTAINER -->
+<div id="loggedOutView" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 242, 245, 0.95); display: flex; justify-content: center; align-items: center; z-index: 9999;">
+  
+  <!-- THE LOGIN/RESET CARD -->
+  <div style="width: 100%; max-width: 340px; padding: 28px; background: white; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); border: 1px solid #e2e8f0;">
 
-  <!-- 1. LOGIN FORM CONTAINER -->
-  <div id="authLoginSection" style="display: flex; flex-direction: column; gap: 10px;">
-    <h3 style="margin: 0 0 5px 0; font-size: 1.2rem; color: #1a202c;">Staff Sign In</h3>
-    
-    <input type="email" id="loginEmailInput" placeholder="teacher@sph.ac.id" style="padding: 9px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.9rem;" />
-    
-    <input type="password" id="loginPasswordInput" placeholder="Password" style="padding: 9px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.9rem;" />
-    
-    <button type="button" onclick="handleEmailPasswordLogin()" style="padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px;">Sign In</button>
-    
-    <div style="margin-top: 8px; text-align: center;">
-      <a href="javascript:void(0)" onclick="toggleAuthMode('reset')" style="font-size: 0.85rem; color: #007bff; text-decoration: none;">Forgot password?</a>
+    <!-- 1. LOGIN FORM SECTION -->
+    <div id="authLoginSection" style="display: flex; flex-direction: column; gap: 12px;">
+      <h3 style="margin: 0 0 4px 0; font-size: 1.3rem; color: #1a202c; font-weight: 700;">Staff Sign In</h3>
+      <p style="font-size: 0.85rem; color: #64748b; margin: 0 0 8px 0;">Sign in to access school space bookings.</p>
+      
+      <input type="email" id="loginEmailInput" placeholder="teacher@sph.ac.id" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem;" />
+      
+      <input type="password" id="loginPasswordInput" placeholder="Password" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem;" />
+      
+      <button type="button" onclick="handleEmailPasswordLogin()" style="padding: 11px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.95rem; margin-top: 4px;">Sign In</button>
+      
+      <div style="margin-top: 6px; text-align: center;">
+        <a href="javascript:void(0)" onclick="toggleAuthMode('reset')" style="font-size: 0.85rem; color: #007bff; text-decoration: none;">Forgot password?</a>
+      </div>
     </div>
-  </div>
 
-  <!-- 2. FORGOT PASSWORD CONTAINER (Hidden inside the same card) -->
-  <div id="authResetSection" style="display: none; flex-direction: column; gap: 10px;">
-    <h3 style="margin: 0; font-size: 1.2rem; color: #1a202c;">Reset Password</h3>
-    <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Enter your school email and we'll send a password reset link.</p>
-    
-    <input type="email" id="resetEmailInput" placeholder="teacher@sph.ac.id" style="padding: 9px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.9rem;" />
-    
-    <button type="button" onclick="sendPasswordResetEmail()" style="padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px;">Send Reset Link</button>
-    
-    <button type="button" onclick="toggleAuthMode('login')" style="padding: 6px; background: transparent; color: #64748b; border: none; cursor: pointer; font-size: 0.85rem;">← Back to Login</button>
-  </div>
+    <!-- 2. FORGOT PASSWORD SECTION (Initially Hidden) -->
+    <div id="authResetSection" style="display: none; flex-direction: column; gap: 12px;">
+      <h3 style="margin: 0 0 4px 0; font-size: 1.3rem; color: #1a202c; font-weight: 700;">Reset Password</h3>
+      <p style="font-size: 0.85rem; color: #64748b; margin: 0 0 8px 0;">Enter your school email and we'll send a password reset link.</p>
+      
+      <input type="email" id="resetEmailInput" placeholder="teacher@sph.ac.id" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem;" />
+      
+      <button type="button" onclick="sendPasswordResetEmail()" style="padding: 11px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.95rem; margin-top: 4px;">Send Reset Link</button>
+      
+      <button type="button" onclick="toggleAuthMode('login')" style="padding: 8px; background: transparent; color: #64748b; border: none; cursor: pointer; font-size: 0.85rem; margin-top: 4px;">← Back to Login</button>
+    </div>
 
-</div>
+  </div>
 </div>
 
   <!-- View when logged in -->
