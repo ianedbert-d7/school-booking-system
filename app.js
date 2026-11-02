@@ -147,12 +147,19 @@ const ADMIN_EMAILS = [
 function toggleAuthMode(mode) {
   const loginSec = document.getElementById('authLoginSection');
   const resetSec = document.getElementById('authResetSection');
+  const updateSec = document.getElementById('authUpdatePasswordSection');
 
-  if (mode === 'reset') {
-    loginSec.style.display = 'none';
+  // Hide all first
+  if (loginSec) loginSec.style.display = 'none';
+  if (resetSec) resetSec.style.display = 'none';
+  if (updateSec) updateSec.style.display = 'none';
+
+  // Show the requested one
+  if (mode === 'reset' && resetSec) {
     resetSec.style.display = 'flex';
-  } else {
-    resetSec.style.display = 'none';
+  } else if (mode === 'update' && updateSec) {
+    updateSec.style.display = 'flex';
+  } else if (loginSec) {
     loginSec.style.display = 'flex';
   }
 }
@@ -229,29 +236,29 @@ async function checkAuthSession() {
 // 1. Listen for Supabase Auth State Changes
 supabaseClient.auth.onAuthStateChange(async (event, session) => {
   if (event === 'PASSWORD_RECOVERY') {
-    // Automatically reveal the overlay if hidden
+    // Show the overlay
     const loggedOutView = document.getElementById('loggedOutView');
     if (loggedOutView) loggedOutView.style.display = 'flex';
 
-    // Switch your UI card inside the overlay to the reset section
-    toggleAuthMode('reset');
-    
-    // Optional: Give them a friendly prompt
-    alert('Please enter your new password below.');
+    // Switch to the NEW password input view (instead of the email request view!)
+    toggleAuthMode('update');
   } else if (session) {
-    // Normal login flow - hide the overlay and show the booking grid
-    document.getElementById('loggedOutView').style.display = 'none';
-    handleUserSession(session.user);
+    // Normal session active, hide login overlay
+    const loggedOutView = document.getElementById('loggedOutView');
+    if (loggedOutView) loggedOutView.style.display = 'none';
+    if (typeof handleUserSession === 'function') handleUserSession(session.user);
   } else {
-    // Signed out state - keep overlay visible and on login mode
-    document.getElementById('loggedOutView').style.display = 'flex';
+    // Signed out
+    const loggedOutView = document.getElementById('loggedOutView');
+    if (loggedOutView) loggedOutView.style.display = 'flex';
     toggleAuthMode('login');
   }
 });
 
 // Function that runs when they click "Update Password" in the modal
 async function updateNewPassword() {
-  const newPassword = document.getElementById('newPasswordInput').value;
+  const newPasswordInput = document.getElementById('newPasswordInput');
+  const newPassword = newPasswordInput ? newPasswordInput.value.trim() : '';
 
   if (!newPassword || newPassword.length < 6) {
     alert('Password must be at least 6 characters long.');
@@ -267,9 +274,8 @@ async function updateNewPassword() {
     alert('Failed to update password: ' + error.message);
   } else {
     alert('Password successfully updated! You are now logged in.');
-    document.getElementById('resetPasswordModal').style.display = 'none';
-    // Refresh or let session take over
-    window.location.href = window.location.origin; // Clears the recovery tokens from the URL
+    // Clear recovery tokens from URL and refresh to main app state
+    window.location.href = window.location.origin;
   }
 }
   // Listen for login/logout state changes
