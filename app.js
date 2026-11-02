@@ -293,35 +293,48 @@ async function handleEmailPasswordLogin() {
   const emailInput = document.getElementById('loginEmailInput');
   const passwordInput = document.getElementById('loginPasswordInput');
   
-  const email = emailInput.value.trim().toLowerCase();
-  const password = passwordInput.value;
+  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+  const password = passwordInput ? passwordInput.value : '';
 
-  if (!email.endsWith(SCHOOL_DOMAIN)) {
-    alert(`Access denied. Please use your official school email ending in ${SCHOOL_DOMAIN}`);
+  if (!email || !password) {
+    alert('Please enter both email and password.');
     return;
   }
 
-  if (!password) {
-    alert('Please enter your password.');
+  // Optional: enforce school domain constraint
+  if (!email.endsWith('@sph.ac.id')) {
+    alert('Access restricted to @sph.ac.id school accounts.');
     return;
   }
 
-  // Authenticate against Supabase Auth
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email: email,
-    password: password
-  });
+  try {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
 
-  if (error) {
-    console.error('Login error:', error.message);
-    alert('Login failed: ' + error.message);
-    return;
+    if (error) throw error;
+
+    alert('Successfully signed in!');
+
+    // 1. HIDE THE LOGIN MODAL OVERLAY IMMEDIATELY
+    const loggedOutView = document.getElementById('loggedOutView');
+    if (loggedOutView) {
+      loggedOutView.style.display = 'none';
+    }
+
+    // 2. TRIGGER YOUR SESSION/APP SETUP FUNCTION
+    if (typeof handleUserSession === 'function') {
+      handleUserSession(data.session.user);
+    } else {
+      // Fallback if your function has a different name, or just reload the app state
+      window.location.reload();
+    }
+
+  } catch (err) {
+    console.error('Sign-in error:', err.message);
+    alert('Failed to sign in: ' + err.message);
   }
-
-  // Note: Once successful, Supabase's built-in onAuthStateChange listener 
-  // (which you already have running) will automatically catch the session 
-  // and run your verifyAndSetUserRole() check!
-  alert('Successfully signed in!');
 }
 
 // Make sure the word 'async' is right before 'function'
