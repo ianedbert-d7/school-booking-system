@@ -150,29 +150,28 @@ function showForgotPasswordView(e) {
   const forgotView = document.getElementById('forgotPasswordView');
   
   if (loginView) loginView.style.display = 'none';
-  if (forgotView) forgotView.style.display = 'flex'; // Explicitly show the block
+  if (forgotView) forgotView.style.display = 'flex'; // Explicitly turns on the reset card
 }
 
 function hideForgotPasswordView() {
   const loginView = document.getElementById('loggedOutView');
   const forgotView = document.getElementById('forgotPasswordView');
   
-  if (forgotView) forgotView.style.display = 'none';
-  if (loginView) loginView.style.display = 'flex'; // Bring back the login view
+  if (forgotView) forgotView.style.display = 'none'; // Hides the reset card
+  if (loginView) loginView.style.display = 'flex'; // Brings back the login card
 }
 
 async function sendPasswordResetEmail() {
   const emailInput = document.getElementById('resetEmailInput');
   const email = emailInput.value.trim().toLowerCase();
 
-  if (!email.endsWith(SCHOOL_DOMAIN)) {
-    alert(`Please use your official school email ending in ${SCHOOL_DOMAIN}`);
+  if (!email) {
+    alert('Please enter your school email.');
     return;
   }
 
-  // Request Supabase to send the recovery email
   const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin, // Sends them back to your site with the recovery token
+    redirectTo: window.location.origin,
   });
 
   if (error) {
