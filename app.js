@@ -55,6 +55,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 });
 
+// Place this completely outside of other functions in app.js so it's globally accessible
+async function updateNewPassword() {
+  const newPasswordInput = document.getElementById('newPasswordInput');
+  const newPassword = newPasswordInput ? newPasswordInput.value.trim() : '';
+
+  if (!newPassword || newPassword.length < 6) {
+    alert('Password must be at least 6 characters long.');
+    return;
+  }
+
+  const { error } = await supabaseClient.auth.updateUser({
+    password: newPassword
+  });
+
+  if (error) {
+    console.error('Error updating password:', error.message);
+    alert('Failed to update password: ' + error.message);
+  } else {
+    alert('Password successfully updated! You are now logged in.');
+    window.location.href = window.location.origin;
+  }
+}
+
 // Load Resources and Bookings from Supabase
 async function loadDataFromSupabase() {
   try {
@@ -255,42 +278,7 @@ supabaseClient.auth.onAuthStateChange(async (event, session) => {
   }
 });
 
-// Function that runs when they click "Update Password" in the modal
-async function updateNewPassword() {
-  console.log("Update password button clicked!"); // Check if this shows in your F12 console
-  
-  const newPasswordInput = document.getElementById('newPasswordInput');
-  const newPassword = newPasswordInput ? newPasswordInput.value.trim() : '';
 
-  if (!newPassword || newPassword.length < 6) {
-    alert('Password must be at least 6 characters long.');
-    return;
-  }
-
-  // Automatically detects if your Supabase variable is 'supabaseClient' or 'supabase'
-  const client = window.supabaseClient || window.supabase || (typeof supabaseClient !== 'undefined' ? supabaseClient : null) || (typeof supabase !== 'undefined' ? supabase : null);
-
-  if (!client) {
-    alert('Error: Could not find your Supabase client instance. Check your JS variable name.');
-    console.error('Supabase client is missing.');
-    return;
-  }
-
-  console.log("Sending password update to Supabase...");
-  const { data, error } = await client.auth.updateUser({
-    password: newPassword
-  });
-
-  if (error) {
-    console.error('Error updating password:', error.message);
-    alert('Failed to update password: ' + error.message);
-  } else {
-    console.log('Password updated successfully:', data);
-    alert('Password successfully updated! You are now logged in.');
-    // Clear recovery tokens from URL and refresh to main app state
-    window.location.href = window.location.origin;
-  }
-}
   // Listen for login/logout state changes
   supabaseClient.auth.onAuthStateChange((event, session) => {
     if (session) {
