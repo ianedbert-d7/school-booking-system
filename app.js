@@ -144,42 +144,40 @@ const ADMIN_EMAILS = [
   'ferdinand.christian@sph.ac.id'
 ];
 
-function showForgotPasswordView(e) {
-  e.preventDefault();
-  const loginView = document.getElementById('loggedOutView');
-  const forgotView = document.getElementById('forgotPasswordView');
-  
-  if (loginView) loginView.style.display = 'none';
-  if (forgotView) forgotView.style.display = 'flex'; // Explicitly turns on the reset card
-}
+function toggleAuthMode(mode) {
+  const loginSec = document.getElementById('authLoginSection');
+  const resetSec = document.getElementById('authResetSection');
 
-function hideForgotPasswordView() {
-  const loginView = document.getElementById('loggedOutView');
-  const forgotView = document.getElementById('forgotPasswordView');
-  
-  if (forgotView) forgotView.style.display = 'none'; // Hides the reset card
-  if (loginView) loginView.style.display = 'flex'; // Brings back the login card
+  if (mode === 'reset') {
+    loginSec.style.display = 'none';
+    resetSec.style.display = 'flex';
+  } else {
+    resetSec.style.display = 'none';
+    loginSec.style.display = 'flex';
+  }
 }
 
 async function sendPasswordResetEmail() {
   const emailInput = document.getElementById('resetEmailInput');
-  const email = emailInput.value.trim().toLowerCase();
+  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
 
   if (!email) {
     alert('Please enter your school email.');
     return;
   }
 
-  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin,
-  });
+  try {
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    });
 
-  if (error) {
-    console.error('Password reset error:', error.message);
-    alert('Failed to send reset link: ' + error.message);
-  } else {
-    alert('Success! Check your email inbox for the password reset link.');
-    hideForgotPasswordView();
+    if (error) throw error;
+
+    alert('Password reset link sent! Please check your email inbox.');
+    toggleAuthMode('login');
+  } catch (err) {
+    console.error('Password reset error:', err.message);
+    alert('Failed to send reset email: ' + err.message);
   }
 }
 
