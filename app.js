@@ -307,7 +307,6 @@ async function handleEmailPasswordLogin() {
   }
 
   try {
-    console.log("Attempting sign in...");
     const { data, error } = await supabaseClient.auth.signInWithPassword({
       email: email,
       password: password,
@@ -315,25 +314,12 @@ async function handleEmailPasswordLogin() {
 
     if (error) throw error;
 
-    console.log("Sign in successful! Forcing modal to hide...");
-
-    // 1. Force hide the modal using setProperty with 'important' so nothing can override it
-    const loggedOutView = document.getElementById('loggedOutView');
-    if (loggedOutView) {
-      loggedOutView.style.setProperty('display', 'none', 'important');
-      console.log("loggedOutView hidden successfully.");
-    } else {
-      console.error("Error: #loggedOutView element not found in DOM!");
-    }
-
+    // Success alert
     alert('Successfully signed in!');
 
-    // 2. Trigger user session or reload page to clear states
-    if (typeof handleUserSession === 'function') {
-      handleUserSession(data.session.user);
-    } else {
-      window.location.reload();
-    }
+    // Instantly reload the page. Supabase will read the active session from 
+    // storage, keep the modal closed, and load straight into your calendar grid!
+    window.location.reload();
 
   } catch (err) {
     console.error('Sign-in error:', err.message);
