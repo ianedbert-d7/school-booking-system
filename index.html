@@ -19,6 +19,21 @@
   <input type="password" id="loginPasswordInput" placeholder="Password" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
   
   <button type="button" onclick="handleEmailPasswordLogin()" style="padding: 9px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Sign In</button>
+<!-- ADD THIS BELOW YOUR LOGIN BUTTON -->
+<div style="margin-top: 10px; text-align: center;">
+  <a href="#" onclick="showForgotPasswordView(event)" style="font-size: 0.8rem; color: #007bff; text-decoration: none;">Forgot password?</a>
+</div>
+
+<!-- FORGOT PASSWORD CONTAINER (Initially Hidden) -->
+<div id="forgotPasswordView" style="display: none; flex-direction: column; gap: 10px; max-width: 300px; margin: 50px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  <h3 style="margin-top: 0; font-size: 1.2rem;">Reset Password</h3>
+  <p style="font-size: 0.8rem; color: #666; margin: 0;">Enter your school email and we'll send you a password reset link.</p>
+  
+  <input type="email" id="resetEmailInput" placeholder="teacher@sph.ac.id" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+  
+  <button type="button" onclick="sendPasswordResetEmail()" style="padding: 9px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Send Reset Link</button>
+  <button type="button" onclick="hideForgotPasswordView()" style="padding: 6px; background: transparent; color: #666; border: none; cursor: pointer; font-size: 0.8rem;">Back to Login</button>
+</div>
 </div>
 
   <!-- View when logged in -->
@@ -156,6 +171,18 @@
       </div>
     </div>
   </div>
+
+  <!-- reset password page -->
+  <div id="resetPasswordModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;">
+  <div style="background: white; padding: 25px; border-radius: 8px; width: 350px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+    <h3 style="margin-top: 0; font-size: 1.2rem;">Set New Password</h3>
+    <p style="font-size: 0.85rem; color: #666;">Please enter your new password below.</p>
+    
+    <input type="password" id="newPasswordInput" placeholder="New Password" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px;" />
+    
+    <button type="button" onclick="updateNewPassword()" style="width: 100%; padding: 9px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Update Password</button>
+  </div>
+</div>
 
   <!-- Simulated Email Outbox Drawer -->
   <div class="outbox-drawer" id="outboxDrawer">

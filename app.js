@@ -144,6 +144,40 @@ const ADMIN_EMAILS = [
   'ferdinand.christian@sph.ac.id'
 ];
 
+function showForgotPasswordView(e) {
+  e.preventDefault();
+  document.getElementById('loggedOutView').style.display = 'none';
+  document.getElementById('forgotPasswordView').style.display = 'flex';
+}
+
+function hideForgotPasswordView() {
+  document.getElementById('forgotPasswordView').style.display = 'none';
+  document.getElementById('loggedOutView').style.display = 'flex';
+}
+
+async function sendPasswordResetEmail() {
+  const emailInput = document.getElementById('resetEmailInput');
+  const email = emailInput.value.trim().toLowerCase();
+
+  if (!email.endsWith(SCHOOL_DOMAIN)) {
+    alert(`Please use your official school email ending in ${SCHOOL_DOMAIN}`);
+    return;
+  }
+
+  // Request Supabase to send the recovery email
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin, // Sends them back to your site with the recovery token
+  });
+
+  if (error) {
+    console.error('Password reset error:', error.message);
+    alert('Failed to send reset link: ' + error.message);
+  } else {
+    alert('Success! Check your email inbox for the password reset link.');
+    hideForgotPasswordView();
+  }
+}
+
 // Verify school domain and determine role
 // Replace your old setRoleFromEmail or session handler check with this:
 async function verifyAndSetUserRole(userEmail) {
@@ -188,7 +222,41 @@ async function checkAuthSession() {
   if (session) {
     handleUserSession(session.user);
   }
+// Inside your checkAuthSession() or where you configure auth state changes:
+supabaseClient.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'PASSWORD_RECOVERY') {
+    // Triggered when user clicks the reset link in their email!
+    document.getElementById('resetPasswordModal').style.display = 'flex';
+  } else if (session) {
+    handleUserSession(session.user);
+  } else {
+    handleSignedOut();
+  }
+});
 
+// Function that runs when they click "Update Password" in the modal
+async function updateNewPassword() {
+  const newPassword = document.getElementById('newPasswordInput').value;
+
+  if (!newPassword || newPassword.length < 6) {
+    alert('Password must be at least 6 characters long.');
+    return;
+  }
+
+  const { error } = await supabaseClient.auth.updateUser({
+    password: newPassword
+  });
+
+  if (error) {
+    console.error('Error updating password:', error.message);
+    alert('Failed to update password: ' + error.message);
+  } else {
+    alert('Password successfully updated! You are now logged in.');
+    document.getElementById('resetPasswordModal').style.display = 'none';
+    // Refresh or let session take over
+    window.location.href = window.location.origin; // Clears the recovery tokens from the URL
+  }
+}
   // Listen for login/logout state changes
   supabaseClient.auth.onAuthStateChange((event, session) => {
     if (session) {
