@@ -97,6 +97,7 @@ async function loadDataFromSupabase() {
       title: b.title,
       user: b.user_name,
       email: b.user_email,
+      note: b.note, // <--- ADD THIS LINE HERE
       startSlot: b.start_slot,
       endSlot: b.end_slot
     }));
@@ -328,6 +329,7 @@ async function saveBooking() {
   const title = document.getElementById('modalTitleInput').value.trim() || 'Untitled Booking';
   const user = document.getElementById('modalUser').value.trim() || 'Anonymous Staff';
   const email = currentUserEmail; 
+  const note = document.getElementById('modalNote').value.trim(); // <-- ADD THIS
   const startSlot = parseInt(document.getElementById('modalStartTime').value);
   const endSlot = parseInt(document.getElementById('modalEndTime').value);
   const frequency = document.getElementById('repeatFrequency').value;
@@ -400,6 +402,7 @@ async function saveBooking() {
           title: title,
           user_name: user,
           user_email: email,
+          note: note,
           start_slot: startSlot,
           end_slot: endSlot
         })
@@ -414,6 +417,7 @@ async function saveBooking() {
         title: title,
         user_name: user,
         user_email: email,
+        note: note, // <-- ADD THIS
         start_slot: startSlot,
         end_slot: endSlot
       }));
@@ -429,6 +433,15 @@ async function saveBooking() {
         'Recurring Booking Confirmation', 
         `Successfully booked "${title}" for ${datesToBook.length} sessions starting ${selectedDate} (${frequency.toUpperCase()} repetition).`
       );
+      
+      ADMIN_EMAILS.forEach(adminEmail => {
+        sendSimulatedEmail(
+          adminEmail, 
+          '📢 New Booking Alert (Admin)', 
+          `New booking "${title}" created by ${user} (${email}) for ${datesToBook.length} session(s) starting ${selectedDate}.\nNote: ${note || 'None'}`
+        );
+      });
+      
     }
 
     closeBookingModal();
@@ -643,6 +656,7 @@ function openBookingModal(resourceId = null, startSlot = 0, endSlot = null, exis
     document.getElementById('modalTitleInput').value = existingBooking.title;
     document.getElementById('modalUser').value = existingBooking.user;
     document.getElementById('modalEmail').value = existingBooking.email || '';
+    document.getElementById('modalNote').value = existingBooking.note || ''; // <-- ADD THIS
     document.getElementById('modalStartTime').value = existingBooking.startSlot;
     document.getElementById('modalEndTime').value = existingBooking.endSlot;
     deleteBtn.style.display = 'block';
@@ -651,6 +665,7 @@ function openBookingModal(resourceId = null, startSlot = 0, endSlot = null, exis
     document.getElementById('modalTitleInput').value = '';
     document.getElementById('modalUser').value = '';
     document.getElementById('modalEmail').value = '';
+    document.getElementById('modalNote').value = ''; // <-- ADD THIS
     deleteBtn.style.display = 'none';
   }
 
