@@ -442,7 +442,7 @@ function handleUserSession(user) {
   }
 
   // Update UI Views
-  document.getElementById('loggedOutView').style.display = 'none';
+  document.getElementById('loggedOutView').style.display = 'flex';
   document.getElementById('loggedInView').style.display = 'flex';
   document.getElementById('userDisplayEmail').innerText = currentUserEmail;
   document.getElementById('userDisplayRole').innerText = currentRole;
