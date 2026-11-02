@@ -226,14 +226,26 @@ async function checkAuthSession() {
     handleUserSession(session.user);
   }
 // Inside your checkAuthSession() or where you configure auth state changes:
+// 1. Listen for Supabase Auth State Changes
 supabaseClient.auth.onAuthStateChange(async (event, session) => {
   if (event === 'PASSWORD_RECOVERY') {
-    // Triggered when user clicks the reset link in their email!
-    document.getElementById('resetPasswordModal').style.display = 'flex';
+    // Automatically reveal the overlay if hidden
+    const loggedOutView = document.getElementById('loggedOutView');
+    if (loggedOutView) loggedOutView.style.display = 'flex';
+
+    // Switch your UI card inside the overlay to the reset section
+    toggleAuthMode('reset');
+    
+    // Optional: Give them a friendly prompt
+    alert('Please enter your new password below.');
   } else if (session) {
+    // Normal login flow - hide the overlay and show the booking grid
+    document.getElementById('loggedOutView').style.display = 'none';
     handleUserSession(session.user);
   } else {
-    handleSignedOut();
+    // Signed out state - keep overlay visible and on login mode
+    document.getElementById('loggedOutView').style.display = 'flex';
+    toggleAuthMode('login');
   }
 });
 
