@@ -257,6 +257,8 @@ supabaseClient.auth.onAuthStateChange(async (event, session) => {
 
 // Function that runs when they click "Update Password" in the modal
 async function updateNewPassword() {
+  console.log("Update password button clicked!"); // Check if this shows in your F12 console
+  
   const newPasswordInput = document.getElementById('newPasswordInput');
   const newPassword = newPasswordInput ? newPasswordInput.value.trim() : '';
 
@@ -265,7 +267,17 @@ async function updateNewPassword() {
     return;
   }
 
-  const { error } = await supabaseClient.auth.updateUser({
+  // Automatically detects if your Supabase variable is 'supabaseClient' or 'supabase'
+  const client = window.supabaseClient || window.supabase || (typeof supabaseClient !== 'undefined' ? supabaseClient : null) || (typeof supabase !== 'undefined' ? supabase : null);
+
+  if (!client) {
+    alert('Error: Could not find your Supabase client instance. Check your JS variable name.');
+    console.error('Supabase client is missing.');
+    return;
+  }
+
+  console.log("Sending password update to Supabase...");
+  const { data, error } = await client.auth.updateUser({
     password: newPassword
   });
 
@@ -273,6 +285,7 @@ async function updateNewPassword() {
     console.error('Error updating password:', error.message);
     alert('Failed to update password: ' + error.message);
   } else {
+    console.log('Password updated successfully:', data);
     alert('Password successfully updated! You are now logged in.');
     // Clear recovery tokens from URL and refresh to main app state
     window.location.href = window.location.origin;
