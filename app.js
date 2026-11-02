@@ -100,6 +100,21 @@ function handleRoleChange() {
 }
 
 function updateRoleUI() {
+  const roleBadge = document.getElementById('userRoleBadge');
+  if (roleBadge) {
+    roleBadge.innerText = currentRole; // Dynamically shows 'admin' or 'user'
+    
+    // Style the badge differently for admins vs users for visual clarity
+    if (currentRole === 'admin') {
+      roleBadge.style.background = '#d4edda';
+      roleBadge.style.color = '#155724';
+    } else {
+      roleBadge.style.background = '#e9ecef';
+      roleBadge.style.color = '#383d41';
+    }
+  }
+
+  // Show/hide admin-only buttons or management tools across the app
   const adminElements = document.querySelectorAll('.admin-only');
   adminElements.forEach(el => {
     el.style.display = (currentRole === 'admin') ? 'block' : 'none';
