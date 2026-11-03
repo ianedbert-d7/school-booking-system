@@ -450,7 +450,7 @@ async function saveBooking() {
       sendSimulatedEmail(
         email, 
         'Booking Confirmation', 
-        `Successfully booked "${title}" for ${datesToBook.length} session(s) starting ${selectedDate}.`
+        `Successfully booked "${title}, thank you!" for ${datesToBook.length} session(s) starting ${selectedDate}.`
       );
     }
 
