@@ -428,19 +428,12 @@ async function saveBooking() {
 
       if (error) throw error;
 
+      // Keep local outbox drawer updated for the user UI
       sendSimulatedEmail(
         email, 
-        'Recurring Booking Confirmation', 
-        `Successfully booked "${title}" for ${datesToBook.length} sessions starting ${selectedDate} (${frequency.toUpperCase()} repetition).`
+        'Booking Confirmation', 
+        `Successfully booked "${title}" for ${datesToBook.length} session(s) starting ${selectedDate}.`
       );
-      
-      ADMIN_EMAILS.forEach(adminEmail => {
-        sendSimulatedEmail(
-          adminEmail, 
-          '📢 New Booking Alert (Admin)', 
-          `New booking "${title}" created by ${user} (${email}) for ${datesToBook.length} session(s) starting ${selectedDate}.\nNote: ${note || 'None'}`
-        );
-      });
       
     }
 
