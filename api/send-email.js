@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // Allow only POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -14,7 +13,7 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
       },
       body: JSON.stringify({
-        from: 'SPH Bookings <onboarding@resend.dev>',
+        from: 'Acme <onboarding@resend.dev>', // Must use Resend's default domain unless you verified your own
         to: [email],
         subject: `Booking Confirmation: ${title}`,
         text: `Successfully booked "${title}" for ${datesCount} session(s) starting ${selectedDate}.\nNotes: ${note || 'None'}`
