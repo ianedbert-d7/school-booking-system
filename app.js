@@ -449,7 +449,7 @@ async function saveBooking() {
       // 2. Keep local outbox drawer updated for the user UI
       sendSimulatedEmail(
         email, 
-        'Booking Confirmation', 
+        'Booking Confirmation:', 
         `Successfully booked "${title}, thank you!" for ${datesToBook.length} session(s) starting ${selectedDate}.`
       );
     }
