@@ -428,26 +428,24 @@ async function saveBooking() {
         .insert(recordsToInsert);
 
       if (error) throw error;
-
-      // 1. Send real email via Resend API directly
+// Send real email via your Vercel backend route
       try {
-        await fetch('https://api.resend.com/emails', {
+        await fetch('/api/send-email', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${RESEND_API_KEY}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            from: 'SPH Bookings <onboarding@resend.dev>',
-            to: [email], // Note: Must match your Resend account email on the free tier
-            subject: `Booking Confirmation: ${title}`,
-            text: `Successfully booked "${title}" for ${datesToBook.length} session(s) starting ${selectedDate}.\nNotes: ${note || 'None'}`
+            email: email,
+            title: title,
+            datesCount: datesToBook.length,
+            selectedDate: selectedDate,
+            note: note
           })
         });
       } catch (emailErr) {
-        console.error('Failed to send real email:', emailErr);
+        console.error('Failed to trigger email API:', emailErr);
       }
-
       // 2. Keep local outbox drawer updated for the user UI
       sendSimulatedEmail(
         email, 
