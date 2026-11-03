@@ -3,6 +3,7 @@
 // ==========================================
 const SUPABASE_URL = 'https://ujwbbgoaatevcylyxtgb.supabase.co/'; // e.g., https://xyzcompany.supabase.co
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqd2JiZ29hYXRldmN5bHl4dGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzMTYzMTcsImV4cCI6MjEwODg5MjMxN30.xpO8LofuJx3Zw-1YAL0E4wIB3aKHxgtQ8ODtALbJ-FU'; // e.g., eyJhbGciOi...
+const RESEND_API_KEY = 're_iAV2k2bQ_6wnfMFT1evn4N8oesuRY2Prb';
 
 // Safely initialize Supabase
 let supabaseClient = null;
@@ -409,7 +410,7 @@ async function saveBooking() {
         .eq('id', bookingId);
 
       if (error) throw error;
-    } else {
+      } else {
       // Bulk insert for recurring bookings
       const recordsToInsert = datesToBook.map(d => ({
         resource_id: resourceId,
@@ -417,7 +418,7 @@ async function saveBooking() {
         title: title,
         user_name: user,
         user_email: email,
-        note: note, // <-- ADD THIS
+        note: note,
         start_slot: startSlot,
         end_slot: endSlot
       }));
@@ -428,13 +429,31 @@ async function saveBooking() {
 
       if (error) throw error;
 
-      // Keep local outbox drawer updated for the user UI
+      // 1. Send real email via Resend API directly
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${re_iAV2k2bQ_6wnfMFT1evn4N8oesuRY2Prb}`
+          },
+          body: JSON.stringify({
+            from: 'SPH Bookings <onboarding@resend.dev>',
+            to: [email], // Note: Must match your Resend account email on the free tier
+            subject: `Booking Confirmation: ${title}`,
+            text: `Successfully booked "${title}" for ${datesToBook.length} session(s) starting ${selectedDate}.\nNotes: ${note || 'None'}`
+          })
+        });
+      } catch (emailErr) {
+        console.error('Failed to send real email:', emailErr);
+      }
+
+      // 2. Keep local outbox drawer updated for the user UI
       sendSimulatedEmail(
         email, 
         'Booking Confirmation', 
         `Successfully booked "${title}" for ${datesToBook.length} session(s) starting ${selectedDate}.`
       );
-      
     }
 
     closeBookingModal();
