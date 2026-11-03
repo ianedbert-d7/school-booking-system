@@ -435,7 +435,7 @@ async function saveBooking() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${re_iAV2k2bQ_6wnfMFT1evn4N8oesuRY2Prb}`
+            'Authorization': `Bearer ${RESEND_API_KEY}`
           },
           body: JSON.stringify({
             from: 'SPH Bookings <onboarding@resend.dev>',
