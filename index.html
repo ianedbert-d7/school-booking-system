@@ -151,6 +151,24 @@
       </div>
     </div>
 
+    <!-- SINGLE CLEAN MODAL FOOTER -->
+    <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding-top: 1.25rem; margin-top: 1rem; border-top: 1px solid #e9ecef;">
+      <button id="deleteBtn" type="button" onclick="deleteBooking()" style="background: #dc3545; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; display: none;">
+        Cancel Booking
+      </button>
+
+      <div style="margin-left: auto; display: flex; gap: 10px;">
+        <button type="button" onclick="closeBookingModal()" style="background: #6c757d; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;">
+          Close
+        </button>
+        <button id="saveBookingBtn" type="button" onclick="saveBooking()" style="background: #28a745; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+          Confirm Booking
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
     <!-- MODAL FOOTER: INSIDE THE CARD -->
     <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding-top: 1.25rem; margin-top: 1rem; border-top: 1px solid #e9ecef;">
       <!-- Red Cancel Booking button (shows when editing) -->
