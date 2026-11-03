@@ -668,7 +668,7 @@ function openBookingModal(resourceId = null, startSlot = 0, endSlot = null, exis
     // EDIT MODE
     document.getElementById('bookingId').value = existingBooking.id;
     document.getElementById('modalTitleInput').value = existingBooking.title;
-    document.getElementById('modalUser').value = existingBooking.user;
+    document.getElementById('modalUser').value = '';
     document.getElementById('modalEmail').value = existingBooking.email || '';
     document.getElementById('modalNote').value = existingBooking.note || '';
     document.getElementById('modalStartTime').value = existingBooking.startSlot;
