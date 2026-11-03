@@ -655,17 +655,17 @@ function handleGlobalMouseUp() {
 
 function openBookingModal(resourceId = null, startSlot = 0, endSlot = null, existingBooking = null) {
   const modal = document.getElementById('bookingModal');
-  const modalTitle = modal.querySelector('h3') || modal.querySelector('.modal-title');
-  const confirmBtn = document.getElementById('saveBookingBtn'); // Add id="saveBookingBtn" to main green button
+  const headerTitle = document.getElementById('modalHeaderTitle');
+  const saveBtn = document.getElementById('saveBookingBtn');
   const deleteBtn = document.getElementById('deleteBtn');
-  const repeatContainer = document.getElementById('repeatSettingsWrapper') || document.getElementById('repeatFrequency')?.parentElement;
+  const repeatContainer = document.getElementById('repeatSettingsContainer');
 
   if (resourceId) document.getElementById('modalResource').value = resourceId;
   document.getElementById('modalStartTime').value = startSlot;
   document.getElementById('modalEndTime').value = endSlot !== null ? Math.min(endSlot, TOTAL_SLOTS) : Math.min(startSlot + 2, TOTAL_SLOTS);
 
   if (existingBooking) {
-    // EDIT / EXISTING BOOKING MODE
+    // EDIT MODE
     document.getElementById('bookingId').value = existingBooking.id;
     document.getElementById('modalTitleInput').value = existingBooking.title;
     document.getElementById('modalUser').value = existingBooking.user;
@@ -674,11 +674,11 @@ function openBookingModal(resourceId = null, startSlot = 0, endSlot = null, exis
     document.getElementById('modalStartTime').value = existingBooking.startSlot;
     document.getElementById('modalEndTime').value = existingBooking.endSlot;
 
-    // UI Adjustments for Existing Booking
-    if (modalTitle) modalTitle.innerText = 'Edit Booking Details';
-    if (confirmBtn) confirmBtn.innerText = 'Update Booking';
-    if (deleteBtn) deleteBtn.style.display = 'inline-block';
-    if (repeatContainer) repeatContainer.style.display = 'none'; // Hide repeat options on edit
+    // Header & Button texts
+    if (headerTitle) headerTitle.innerText = 'Edit Booking Details';
+    if (saveBtn) saveBtn.innerText = 'Update Booking';
+    if (deleteBtn) deleteBtn.style.display = 'block'; // Show red Cancel Booking button
+    if (repeatContainer) repeatContainer.style.display = 'none';
   } else {
     // NEW BOOKING MODE
     document.getElementById('bookingId').value = '';
@@ -686,11 +686,11 @@ function openBookingModal(resourceId = null, startSlot = 0, endSlot = null, exis
     document.getElementById('modalUser').value = currentUserEmail ? currentUserEmail.split('@')[0] : '';
     document.getElementById('modalEmail').value = currentUserEmail || '';
     document.getElementById('modalNote').value = '';
-    
-    // UI Adjustments for New Booking
-    if (modalTitle) modalTitle.innerText = 'Book a Space';
-    if (confirmBtn) confirmBtn.innerText = 'Confirm Booking';
-    if (deleteBtn) deleteBtn.style.display = 'none';
+
+    // Header & Button texts
+    if (headerTitle) headerTitle.innerText = 'Book a Space';
+    if (saveBtn) saveBtn.innerText = 'Confirm Booking';
+    if (deleteBtn) deleteBtn.style.display = 'none'; // Hide red Cancel Booking button
     if (repeatContainer) repeatContainer.style.display = 'block';
   }
 
