@@ -655,28 +655,43 @@ function handleGlobalMouseUp() {
 
 function openBookingModal(resourceId = null, startSlot = 0, endSlot = null, existingBooking = null) {
   const modal = document.getElementById('bookingModal');
+  const modalTitle = modal.querySelector('h3') || modal.querySelector('.modal-title');
+  const confirmBtn = document.getElementById('saveBookingBtn'); // Add id="saveBookingBtn" to main green button
   const deleteBtn = document.getElementById('deleteBtn');
+  const repeatContainer = document.getElementById('repeatSettingsWrapper') || document.getElementById('repeatFrequency')?.parentElement;
 
   if (resourceId) document.getElementById('modalResource').value = resourceId;
   document.getElementById('modalStartTime').value = startSlot;
   document.getElementById('modalEndTime').value = endSlot !== null ? Math.min(endSlot, TOTAL_SLOTS) : Math.min(startSlot + 2, TOTAL_SLOTS);
 
   if (existingBooking) {
+    // EDIT / EXISTING BOOKING MODE
     document.getElementById('bookingId').value = existingBooking.id;
     document.getElementById('modalTitleInput').value = existingBooking.title;
     document.getElementById('modalUser').value = existingBooking.user;
     document.getElementById('modalEmail').value = existingBooking.email || '';
-    document.getElementById('modalNote').value = existingBooking.note || ''; // <-- ADD THIS
+    document.getElementById('modalNote').value = existingBooking.note || '';
     document.getElementById('modalStartTime').value = existingBooking.startSlot;
     document.getElementById('modalEndTime').value = existingBooking.endSlot;
-    deleteBtn.style.display = 'block';
+
+    // UI Adjustments for Existing Booking
+    if (modalTitle) modalTitle.innerText = 'Edit Booking Details';
+    if (confirmBtn) confirmBtn.innerText = 'Update Booking';
+    if (deleteBtn) deleteBtn.style.display = 'inline-block';
+    if (repeatContainer) repeatContainer.style.display = 'none'; // Hide repeat options on edit
   } else {
+    // NEW BOOKING MODE
     document.getElementById('bookingId').value = '';
     document.getElementById('modalTitleInput').value = '';
-    document.getElementById('modalUser').value = '';
-    document.getElementById('modalEmail').value = '';
-    document.getElementById('modalNote').value = ''; // <-- ADD THIS
-    deleteBtn.style.display = 'none';
+    document.getElementById('modalUser').value = currentUserEmail ? currentUserEmail.split('@')[0] : '';
+    document.getElementById('modalEmail').value = currentUserEmail || '';
+    document.getElementById('modalNote').value = '';
+    
+    // UI Adjustments for New Booking
+    if (modalTitle) modalTitle.innerText = 'Book a Space';
+    if (confirmBtn) confirmBtn.innerText = 'Confirm Booking';
+    if (deleteBtn) deleteBtn.style.display = 'none';
+    if (repeatContainer) repeatContainer.style.display = 'block';
   }
 
   modal.classList.add('active');

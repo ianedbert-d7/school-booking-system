@@ -188,11 +188,22 @@
 </div>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="deleteBtn" style="display:none; color: #dc2626; border-color: #fca5a5;" onclick="deleteBooking()">Cancel Booking</button>
-        <button class="btn btn-secondary" onclick="closeBookingModal()">Close</button>
-        <button class="btn btn-primary" id="saveBookingBtn" onclick="saveBooking()">Save Booking</button>
-      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
+  <!-- Left Side: Cancel/Delete Booking (Only visible on Edit) -->
+  <button id="deleteBtn" type="button" onclick="deleteBooking()" style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; display: none;">
+    Cancel Booking
+  </button>
+  
+  <!-- Right Side: Close & Save/Update Actions -->
+  <div style="margin-left: auto; display: flex; gap: 8px;">
+    <button type="button" onclick="closeBookingModal()" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">
+      Close
+    </button>
+    <button id="saveBookingBtn" type="button" onclick="saveBooking()" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">
+      Confirm Booking
+    </button>
+  </div>
+</div>
     </div>
   </div>
 
