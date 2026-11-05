@@ -851,9 +851,21 @@ function parseTimeToMinutes(timeStr) {
 }
 
 function openRoomQuickBook(resourceId, roomName) {
-  // Opens your existing booking modal with the room pre-selected!
   const modal = document.getElementById('bookingModal');
-  const resSelect = document.getElementById('modalResourceSelect');
-  if (resSelect && resourceId) resSelect.value = resourceId;
+  const resSelect = document.getElementById('modalResource'); // Fixed ID from modalResourceSelect to modalResource
+  
+  if (resSelect && resourceId) {
+    resSelect.value = resourceId;
+    // Trigger change event if your app relies on it for dynamic form behavior
+    resSelect.dispatchEvent(new Event('change'));
+  } else if (resSelect && roomName) {
+    // Fallback search by name if resourceId wasn't passed directly
+    const found = resources.find(r => r.name.toLowerCase().trim() === roomName.toLowerCase().trim());
+    if (found) {
+      resSelect.value = found.id;
+      resSelect.dispatchEvent(new Event('change'));
+    }
+  }
+
   if (modal) modal.classList.add('active');
 }
