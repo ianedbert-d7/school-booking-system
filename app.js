@@ -854,15 +854,16 @@ function checkIsCurrentlyBooked(resourceId) {
   const todayStr = now.toISOString().split('T')[0];
   const selectedDate = document.getElementById('datePicker')?.value || todayStr;
 
-  if (selectedDate !== todayStr) return false;
-
+  // Calculate current slot index based on real-time clock
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const currentSlotIndex = Math.floor((currentMinutes - (START_HOUR * 60)) / INTERVAL_MINS);
 
   return bookings.some(b => {
-    if (b.resource_id !== resourceId || b.booking_date !== todayStr) return false;
-    const startMins = parseTimeToMinutes(b.start_time);
-    const endMins = parseTimeToMinutes(b.end_time);
-    return currentMinutes >= startMins && currentMinutes < endMins;
+    // Fixed property names: resourceId and date
+    if (b.resourceId !== resourceId || b.date !== selectedDate) return false;
+    
+    // Check if the current time falls within the booking's start and end slot range
+    return currentSlotIndex >= b.startSlot && currentSlotIndex < b.endSlot;
   });
 }
 
