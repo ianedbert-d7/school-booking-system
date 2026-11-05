@@ -247,7 +247,9 @@ async function loadDataFromSupabase() {
       email: b.user_email,
       note: b.note,
       startSlot: b.start_slot,
-      endSlot: b.end_slot
+      endSlot: b.end_slot,
+      start_time: getTimeString(b.start_slot),
+      end_time: getTimeString(b.end_slot)
     }));
 
     populateResourceSelect();
@@ -404,7 +406,7 @@ function renderGrid() {
       `;
     });
   }
-
+  
   html += `</div>`;
   viewport.innerHTML = html;
 }
@@ -636,6 +638,7 @@ async function saveBooking() {
 
     closeBookingModal();
     await loadDataFromSupabase();
+    renderGrid(); // Forces the calendar grid to redraw with the new booking instantly!
   } catch (err) {
     console.error('Error saving bookings:', err.message);
     alert('Failed to save bookings to database.');
