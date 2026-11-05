@@ -365,12 +365,12 @@ function renderGrid() {
 
   let html = `<div class="schedule-grid">`;
   
-  // 1. Top-Left Corner Header (Row 1, Column 1)
-  html += `<div class="grid-header-time"></div>`;
+  // 1. Top-Left Corner Header (Row 1, Column 1 - for time labels column header)
+  html += `<div class="grid-header-time" style="grid-row: 1; grid-column: 1;"></div>`;
 
   // 2. Resource Headers (Row 1, Columns 2 to N+1)
   sortedResources.forEach((res, colIdx) => {
-    const colIndex = colIdx + 2; // Col 1 is time labels
+    const colIndex = colIdx + 2; // Shifted over by 1 so Column 1 is reserved for time labels
     html += `
       <div class="resource-header" style="grid-row: 1; grid-column: ${colIndex};">
         <div class="resource-name">${res.name}</div>
@@ -385,12 +385,12 @@ function renderGrid() {
     const hour = Math.floor(totalMins / 60);
     const mins = totalMins % 60;
     const isHour = mins === 0;
-    const gridRowIndex = i + 2; // Row 1 is headers
+    const gridRowIndex = i + 2;
 
-    // Time Label (Column 1, Row i+2) - Sticky on X and Y axis
+    // KEEP THIS ONE: This is the correct time column in Column 1!
     html += `<div class="time-slot-label ${isHour ? 'hour-mark' : ''}" style="grid-row: ${gridRowIndex}; grid-column: 1;">${formatTime(hour, mins)}</div>`;
 
-    // Resource Cells (Columns 2 to N+1, Row i+2)
+    // Resource Cells (Columns 2 to N+1)
     sortedResources.forEach((res, colIdx) => {
       const colIndex = colIdx + 2;
       html += `
