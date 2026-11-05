@@ -62,19 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Load live data from Supabase
   await loadDataFromSupabase();
-
-  // Check initial authentication session
   await checkAuthSession();
-
-  // Synchronize time column scrolling with grid viewport
-  const viewport = document.getElementById('gridViewport');
-  const timeWrapper = document.getElementById('timeColumnSlots');
-  
-  if (viewport && timeWrapper) {
-    viewport.addEventListener('scroll', () => {
-      timeWrapper.scrollTop = viewport.scrollTop;
-    });
-  }
 });
 
 // ==========================================
