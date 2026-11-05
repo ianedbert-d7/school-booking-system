@@ -218,9 +218,6 @@ input[type="date"] {
 
 /* Booking Cards */
 .booking-card {
-  position: absolute;
-  left: 4px;
-  right: 4px;
   background: var(--booked-slot);
   border: 1px solid var(--booked-border);
   border-left: 4px solid var(--primary);
@@ -232,6 +229,7 @@ input[type="date"] {
   z-index: 5;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   transition: transform 0.1s;
+  margin: 2px; /* Adds a tiny breathing room inside the grid slots */
 }
 
 .booking-card:hover {
