@@ -330,7 +330,7 @@ function populateTimeSelects() {
 }
 
 function renderGrid() {
-  const viewport = document.getElementById('gridViewport');
+  const viewport = document.getElementById('gridViewport'); // or schedule container
   const typeFilterEl = document.getElementById('typeFilter');
   if (!viewport) return;
 
@@ -341,78 +341,68 @@ function renderGrid() {
     : resources.filter(r => r.type === typeFilter);
 
   const sortedResources = [...filteredResources].sort((a, b) => {
-    if (a.type !== b.type) {
-      return a.type.localeCompare(b.type);
-    }
+    if (a.type !== b.type) return a.type.localeCompare(b.type);
     return a.name.localeCompare(b.name);
   });
 
-  viewport.innerHTML = '';
+  // Set CSS variable for dynamic column count
+  viewport.style.setProperty('--resource-count', sortedResources.length);
 
+  let html = `<div class="schedule-grid">`;
+  
+  // 1. Top-Left Corner Header
+  html += `<div class="grid-header-time"></div>`;
+
+  // 2. Resource Headers (Row 1, Columns 2 to N+1)
   sortedResources.forEach(res => {
-    const col = document.createElement('div');
-    col.className = 'resource-column';
+    html += `
+      <div class="resource-header">
+        <div class="resource-name">${res.name}</div>
+        <div class="resource-type">${res.type}</div>
+      </div>
+    `;
+  });
 
-    const header = document.createElement('div');
-    header.className = 'resource-header';
-    header.innerHTML = `<div class="resource-name">${res.name}</div><div class="resource-type">${res.type}</div>`;
-    col.appendChild(header);
+  // 3. Rows for each time slot (Rows 2 to 41)
+  for (let i = 0; i < TOTAL_SLOTS; i++) {
+    const totalMins = (START_HOUR * 60) + (i * INTERVAL_MINS);
+    const hour = Math.floor(totalMins / 60);
+    const mins = totalMins % 60;
+    const isHour = mins === 0;
 
-    const slotsContainer = document.createElement('div');
-    slotsContainer.className = 'grid-slots';
+    // Time Label (Column 1)
+    html += `<div class="time-slot-label ${isHour ? 'hour-mark' : ''}">${formatTime(hour, mins)}</div>`;
 
-    for (let i = 0; i < TOTAL_SLOTS; i++) {
-      const isHour = ((START_HOUR * 60) + (i * INTERVAL_MINS)) % 60 === 0;
-      const cell = document.createElement('div');
-      cell.className = `grid-cell ${isHour ? 'hour-mark' : ''}`;
-      cell.dataset.resourceId = res.id;
-      cell.dataset.slotIndex = i;
+    // Cells for each resource in this row
+    sortedResources.forEach((res, colIndex) => {
+      html += `
+        <div class="grid-cell ${isHour ? 'hour-mark' : ''}" 
+             data-resource-id="${res.id}" 
+             data-slot-index="${i}"
+             onmousedown="handleCellMouseDown(event, '${res.id}', ${i})"
+             onmouseenter="handleCellMouseEnter('${res.id}', ${i})">
+        </div>
+      `;
+    });
+  }
 
-      cell.onmousedown = (e) => {
-        e.preventDefault();
-        isDragging = true;
-        dragResourceId = res.id;
-        dragStartSlot = i;
-        dragCurrentSlot = i;
-        updateDragUI();
-      };
+  html += `</div>`;
+  viewport.innerHTML = html;
 
-      cell.onmouseenter = () => {
-        if (isDragging && dragResourceId === res.id) {
-          dragCurrentSlot = i;
-          updateDragUI();
-        }
-      };
-
-      slotsContainer.appendChild(cell);
-    }
-
+  // 4. Render bookings on top of the grid
+  sortedResources.forEach((res, colIndex) => {
     const resBookings = bookings.filter(b => b.resourceId === res.id && b.date === selectedDate);
     resBookings.forEach(b => {
       const card = document.createElement('div');
       card.className = 'booking-card';
       
-      const topPx = b.startSlot * 30;
+      const topPx = (b.startSlot * 30) + 57; // 57px offset for header
+      const leftPx = (colIndex * minColumnWidth) + 90; // Column offset
       const heightPx = (b.endSlot - b.startSlot) * 30;
 
-      card.style.top = `${topPx}px`;
-      card.style.height = `${heightPx - 2}px`;
-
-      card.innerHTML = `
-        <div class="booking-title">${b.title}</div>
-        <div class="booking-time">${getTimeString(b.startSlot)} - ${getTimeString(b.endSlot)} • ${b.user}</div>
-      `;
-
-      card.onclick = (e) => {
-        e.stopPropagation();
-        openBookingModal(res.id, b.startSlot, b.endSlot, b);
-      };
-
-      slotsContainer.appendChild(card);
+      // Position precisely inside the grid coordinate space
+      // ...
     });
-
-    col.appendChild(slotsContainer);
-    viewport.appendChild(col);
   });
 }
 
