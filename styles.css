@@ -546,13 +546,13 @@ input[type="date"] {
 
 /* Translucent Booked State */
 .room-hotspot.booked {
-  background: rgba(254, 242, 242, 0.8);
+  background: rgba(231, 0, 0, 0.8);
   border-color: rgba(239, 68, 68, 0.8);
 }
 
 .room-hotspot.available {
-  background: rgba(240, 253, 244, 0.8);
-  border-color: rgba(34, 197, 94, 0.8);
+  background: rgba(98, 211, 132, 0.8);
+  border-color: rgba(0, 255, 94, 0.986);
 }
 
 .hotspot-title {
