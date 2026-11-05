@@ -367,12 +367,12 @@ function renderGrid() {
 
   let html = `<div class="schedule-grid">`;
   
-  // 1. Top-Left Corner Header (Row 1, Column 1 - for time labels column header)
+  // 1. Top-Left Corner Header
   html += `<div class="grid-header-time" style="grid-row: 1; grid-column: 1;"></div>`;
 
-  // 2. Resource Headers (Row 1, Columns 2 to N+1)
+  // 2. Resource Headers
   sortedResources.forEach((res, colIdx) => {
-    const colIndex = colIdx + 2; // Shifted over by 1 so Column 1 is reserved for time labels
+    const colIndex = colIdx + 2;
     html += `
       <div class="resource-header" style="grid-row: 1; grid-column: ${colIndex};">
         <div class="resource-name">${res.name}</div>
@@ -381,7 +381,7 @@ function renderGrid() {
     `;
   });
 
-  // 3. Time Slots & Resource Cells (Rows 2 to 41)
+  // 3. Time Slots & Resource Cells
   for (let i = 0; i < TOTAL_SLOTS; i++) {
     const totalMins = (START_HOUR * 60) + (i * INTERVAL_MINS);
     const hour = Math.floor(totalMins / 60);
@@ -389,10 +389,8 @@ function renderGrid() {
     const isHour = mins === 0;
     const gridRowIndex = i + 2;
 
-    // KEEP THIS ONE: This is the correct time column in Column 1!
     html += `<div class="time-slot-label ${isHour ? 'hour-mark' : ''}" style="grid-row: ${gridRowIndex}; grid-column: 1;">${formatTime(hour, mins)}</div>`;
 
-    // Resource Cells (Columns 2 to N+1)
     sortedResources.forEach((res, colIdx) => {
       const colIndex = colIdx + 2;
       html += `
@@ -406,6 +404,27 @@ function renderGrid() {
       `;
     });
   }
+
+  // 4. Render Bookings for the Selected Date
+  const activeBookings = bookings.filter(b => b.date === selectedDate);
+  
+  activeBookings.forEach(b => {
+    const resIndex = sortedResources.findIndex(r => r.id === b.resourceId);
+    if (resIndex === -1) return; // Resource is filtered out or doesn't exist
+
+    const colIndex = resIndex + 2;
+    const startRow = b.startSlot + 2;
+    const rowSpan = b.endSlot - b.startSlot;
+
+    html += `
+      <div class="booking-card" 
+           style="grid-row: ${startRow} / span ${rowSpan}; grid-column: ${colIndex};"
+           onclick='openBookingModal(null, 0, null, ${JSON.stringify(b).replace(/'/g, "&#39;")})'>
+        <div class="booking-title">${b.title}</div>
+        <div class="booking-user">${b.user}</div>
+      </div>
+    `;
+  });
   
   html += `</div>`;
   viewport.innerHTML = html;
@@ -638,7 +657,7 @@ async function saveBooking() {
 
     closeBookingModal();
     await loadDataFromSupabase();
-    renderGrid(); // Forces the calendar grid to redraw with the new booking instantly!
+    renderGrid(); 
   } catch (err) {
     console.error('Error saving bookings:', err.message);
     alert('Failed to save bookings to database.');
