@@ -127,7 +127,8 @@ input[type="date"] {
 
 .schedule-grid {
   display: grid;
-  grid-template-columns: 90px repeat(var(--resource-count, 6), minmax(200px, 1fr));
+  /* Only resource columns now, starting directly at Column 1 */
+  grid-template-columns: repeat(var(--resource-count, 6), minmax(200px, 1fr));
   grid-template-rows: 57px repeat(40, 30px);
   width: max-content;
   min-width: 100%;

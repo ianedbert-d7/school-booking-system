@@ -361,38 +361,34 @@ function renderGrid() {
     return a.name.localeCompare(b.name);
   });
 
-  // Set CSS variable for dynamic column count
   viewport.style.setProperty('--resource-count', sortedResources.length);
 
   let html = `<div class="schedule-grid">`;
-  
-  // 1. Top-Left Corner Header (Row 1, Column 1)
-  html += `<div class="grid-header-time"></div>`;
 
-  // 2. Resource Headers (Row 1, Columns 2 to N+1)
-  sortedResources.forEach(res => {
+  // 1. Resource Headers (Row 1, Columns 1 to N) - NO empty corner cell
+  sortedResources.forEach((res, colIdx) => {
+    const colIndex = colIdx + 1;
     html += `
-      <div class="resource-header">
+      <div class="resource-header" style="grid-row: 1; grid-column: ${colIndex};">
         <div class="resource-name">${res.name}</div>
         <div class="resource-type">${res.type}</div>
       </div>
     `;
   });
 
-  // 3. Time Slots & Grid Cells (Rows 2 to 41)
+  // 2. Resource Cells (Rows 2 to 41) - Clean resource columns only
   for (let i = 0; i < TOTAL_SLOTS; i++) {
     const totalMins = (START_HOUR * 60) + (i * INTERVAL_MINS);
     const hour = Math.floor(totalMins / 60);
     const mins = totalMins % 60;
     const isHour = mins === 0;
+    const gridRowIndex = i + 2;
 
-    // Time Label (Column 1)
-    html += `<div class="time-slot-label ${isHour ? 'hour-mark' : ''}">${formatTime(hour, mins)}</div>`;
-
-    // Resource Cells for this time slot (Columns 2 to N+1)
-    sortedResources.forEach(res => {
+    sortedResources.forEach((res, colIdx) => {
+      const colIndex = colIdx + 1;
       html += `
         <div class="grid-cell ${isHour ? 'hour-mark' : ''}" 
+             style="grid-row: ${gridRowIndex}; grid-column: ${colIndex};"
              data-resource-id="${res.id}" 
              data-slot-index="${i}"
              onmousedown="handleCellMouseDown(event, '${res.id}', ${i})"
