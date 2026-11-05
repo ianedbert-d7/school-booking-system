@@ -167,9 +167,10 @@ input[type="date"] {
 }
 
 .time-header {
-  height: 50px;
+  height: 57px;
   border-bottom: 1px solid var(--border-color);
   background: #f8fafc;
+  flex-shrink: 0;
 }
 
 .time-slots-wrapper {
@@ -177,6 +178,10 @@ input[type="date"] {
   flex: 1;
   min-height: 0; 
   scrollbar-width: none; 
+}
+
+.time-slots-wrapper::-webkit-scrollbar {
+  display: none;
 }
 
 .time-slot-label {
@@ -187,6 +192,7 @@ input[type="date"] {
   padding-right: 12px;
   border-bottom: 1px dashed #f1f5f9;
   line-height: 30px;
+  box-sizing: border-box;
 }
 
 .time-slot-label.hour-mark {
@@ -224,6 +230,7 @@ input[type="date"] {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  box-sizing: border-box;
 }
 
 .resource-name {
@@ -245,6 +252,7 @@ input[type="date"] {
   height: 30px;
   border-bottom: 1px dashed #f1f5f9;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .grid-cell.hour-mark {
@@ -481,12 +489,3 @@ input[type="date"] {
   width: 90px; /* Gives extra space for 15-minute timestamp labels */
 }
 
-.time-slots-wrapper {
-  overflow-y: auto;
-  flex: 1;
-  scrollbar-width: none; /* Hide scrollbar on Firefox */
-}
-
-.time-slots-wrapper::-webkit-scrollbar {
-  display: none; /* Hide scrollbar on Chrome/Safari */
-}
