@@ -329,8 +329,24 @@ function populateTimeSelects() {
   if (endSelect) endSelect.innerHTML = options;
 }
 
+function handleCellMouseDown(e, resourceId, slotIndex) {
+  e.preventDefault();
+  isDragging = true;
+  dragResourceId = resourceId;
+  dragStartSlot = slotIndex;
+  dragCurrentSlot = slotIndex;
+  updateDragUI();
+}
+
+function handleCellMouseEnter(resourceId, slotIndex) {
+  if (isDragging && dragResourceId === resourceId) {
+    dragCurrentSlot = slotIndex;
+    updateDragUI();
+  }
+}
+
 function renderGrid() {
-  const viewport = document.getElementById('gridViewport'); // or schedule container
+  const viewport = document.getElementById('gridViewport');
   const typeFilterEl = document.getElementById('typeFilter');
   if (!viewport) return;
 
@@ -350,7 +366,7 @@ function renderGrid() {
 
   let html = `<div class="schedule-grid">`;
   
-  // 1. Top-Left Corner Header
+  // 1. Top-Left Corner Header (Row 1, Column 1)
   html += `<div class="grid-header-time"></div>`;
 
   // 2. Resource Headers (Row 1, Columns 2 to N+1)
@@ -363,7 +379,7 @@ function renderGrid() {
     `;
   });
 
-  // 3. Rows for each time slot (Rows 2 to 41)
+  // 3. Time Slots & Grid Cells (Rows 2 to 41)
   for (let i = 0; i < TOTAL_SLOTS; i++) {
     const totalMins = (START_HOUR * 60) + (i * INTERVAL_MINS);
     const hour = Math.floor(totalMins / 60);
@@ -373,8 +389,8 @@ function renderGrid() {
     // Time Label (Column 1)
     html += `<div class="time-slot-label ${isHour ? 'hour-mark' : ''}">${formatTime(hour, mins)}</div>`;
 
-    // Cells for each resource in this row
-    sortedResources.forEach((res, colIndex) => {
+    // Resource Cells for this time slot (Columns 2 to N+1)
+    sortedResources.forEach(res => {
       html += `
         <div class="grid-cell ${isHour ? 'hour-mark' : ''}" 
              data-resource-id="${res.id}" 
@@ -388,22 +404,6 @@ function renderGrid() {
 
   html += `</div>`;
   viewport.innerHTML = html;
-
-  // 4. Render bookings on top of the grid
-  sortedResources.forEach((res, colIndex) => {
-    const resBookings = bookings.filter(b => b.resourceId === res.id && b.date === selectedDate);
-    resBookings.forEach(b => {
-      const card = document.createElement('div');
-      card.className = 'booking-card';
-      
-      const topPx = (b.startSlot * 30) + 57; // 57px offset for header
-      const leftPx = (colIndex * minColumnWidth) + 90; // Column offset
-      const heightPx = (b.endSlot - b.startSlot) * 30;
-
-      // Position precisely inside the grid coordinate space
-      // ...
-    });
-  });
 }
 
 // ==========================================
