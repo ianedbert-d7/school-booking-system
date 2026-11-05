@@ -503,7 +503,7 @@ input[type="date"] {
   border-radius: 8px;
   padding: 6px 8px 6px 6px;
   /* Translucent white background with blur */
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   border: 2px solid rgba(203, 213, 225, 0.8);
@@ -515,6 +515,23 @@ input[type="date"] {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   z-index: 5;
   text-align: left;
+
+  --hotspot-font-size: clamp(0.7rem, 0.8vw, 0.85rem);
+}
+
+.room-hotspot .hotspot-title {
+  font-size: var(--hotspot-font-size);
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.room-hotspot .hotspot-status {
+  /* Status font scales slightly smaller than title */
+  font-size: calc(var(--hotspot-font-size) - 0.1rem);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .room-hotspot:hover {
@@ -522,6 +539,11 @@ input[type="date"] {
   transform: scale(1.02);
   box-shadow: 0 6px 16px rgba(0,0,0,0.15);
   z-index: 10;
+}
+
+.room-hotspot.compact-hotspot {
+  padding: 4px 6px 4px 4px;
+  --hotspot-font-size: 0.65rem; /* Smaller, fixed size for tight spaces */
 }
 
 /* Translucent Booked State */

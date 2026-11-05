@@ -746,9 +746,9 @@ function renderMapView() {
 
   // Level 3 Rooms
   const l3Rooms = [
-    { name: "Small Meeting Room", cssClass: "hotspot-small-meeting", id: "small-meeting" },
+    { name: "Small Meeting Room", cssClass: "hotspot-small-meeting", id: "small-meeting", isCompact: true },
     { name: "Collab Space",        cssClass: "hotspot-collab-space",  id: "collab-space" },
-    { name: "Meeting Room",        cssClass: "hotspot-meeting-room",  id: "meeting-room" },
+    { name: "Meeting Room",        cssClass: "hotspot-meeting-room",  id: "meeting-room", isCompact: true },
     { name: "MPR",                 cssClass: "hotspot-mpr",           id: "mpr" }
   ];
 
@@ -756,20 +756,22 @@ function renderMapView() {
   const l4Rooms = [
     { name: "Big Gym",             cssClass: "hotspot-big-gym",       id: "big-gym" },
     { name: "L Gym",               cssClass: "hotspot-l-gym",         id: "l-gym" },
-    { name: "Makerspace / JS Lab", cssClass: "hotspot-makerspace",    id: "makerspace" },
-    { name: "Canteen",             cssClass: "hotspot-canteen",       id: "canteen" },
-    { name: "Glass House (Big)",   cssClass: "hotspot-glass-big",     id: "glass-house-big" },
-    { name: "Glass House (Studio)",cssClass: "hotspot-glass-studio",  id: "glass-house-studio" }
+    { name: "Makerspace / JS Lab", cssClass: "hotspot-makerspace",    id: "makerspace", isCompact: true },
+    { name: "Canteen",             cssClass: "hotspot-canteen",       id: "canteen", isCompact: true },
+    { name: "Glass House (Big)",   cssClass: "hotspot-glass-big",     id: "glass-house-big", isCompact: true },
+    { name: "Glass House (Studio)",cssClass: "hotspot-glass-studio",  id: "glass-house-studio", isCompact: true }
   ];
 
-  let html = `
-    <div class="map-card-wrapper" style="margin-bottom: 24px;">
-      <div class="map-header">
-        <h2>Level 3 (L3) Facility Map</h2>
-        <span class="text-muted" style="font-size: 0.85rem;">Click any room to view or book time slots</span>
+  html += `
+      <div class="room-hotspot ${room.cssClass} ${room.isCompact ? 'compact-hotspot' : ''} ${isBooked ? 'booked' : 'available'}" 
+           onclick="openRoomQuickBook('${resData ? resData.id : ''}', '${room.name}')">
+        <div class="hotspot-title">${room.name}</div>
+        <div class="hotspot-status">
+          <span class="status-dot ${isBooked ? 'red' : 'green'}"></span>
+          ${isBooked ? 'Booked' : 'Available'}
+        </div>
       </div>
-      <div class="map-blueprint-container" style="background-image: url('assets/l3-blueprint.jpg');">
-  `;
+    `;
 
   l3Rooms.forEach(room => {
     const resData = resources.find(r => r.name.toLowerCase() === room.name.toLowerCase());
