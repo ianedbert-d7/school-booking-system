@@ -1,8 +1,8 @@
 // ==========================================
 // 1. SUPABASE CONFIGURATION (REPLACE THESE)
 // ==========================================
-const SUPABASE_URL = 'https://ujwbbgoaatevcylyxtgb.supabase.co/'; // e.g., https://xyzcompany.supabase.co
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqd2JiZ29hYXRldmN5bHl4dGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzMTYzMTcsImV4cCI6MjEwODg5MjMxN30.xpO8LofuJx3Zw-1YAL0E4wIB3aKHxgtQ8ODtALbJ-FU'; // e.g., eyJhbGciOi...
+const SUPABASE_URL = 'https://ujwbbgoaatevcylyxtgb.supabase.co/'; 
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqd2JiZ29hYXRldmN5bHl4dGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzMTYzMTcsImV4cCI6MjEwODg5MjMxN30.xpO8LofuJx3Zw-1YAL0E4wIB3aKHxgtQ8ODtALbJ-FU'; 
 const RESEND_API_KEY = 're_iAV2k2bQ_6wnfMFT1evn4N8oesuRY2Prb';
 
 // Safely initialize Supabase
@@ -19,7 +19,6 @@ const END_HOUR = 17; // 5 PM
 const INTERVAL_MINS = 15;
 const TOTAL_SLOTS = ((END_HOUR - START_HOUR) * 60) / INTERVAL_MINS;
 
-
 let selectedDate = new Date().toISOString().split('T')[0];
 
 let resources = [];
@@ -32,13 +31,29 @@ let dragResourceId = null;
 let dragStartSlot = null;
 let dragCurrentSlot = null;
 
-// Initialize Page
+// Global Role State & School Domain
+let currentRole = 'user'; 
+let currentUserEmail = ''; 
+const SCHOOL_DOMAIN = '@sph.ac.id';
+
+const ADMIN_EMAILS = [
+  'ian.dermawan@sph.ac.id',
+  'riana.haryanto@sph.ac.id',
+  'ferdinand.christian@sph.ac.id'
+];
+
+// ==========================================
+// INITIALIZATION ON PAGE LOAD
+// ==========================================
 document.addEventListener('DOMContentLoaded', async () => {
-  document.getElementById('datePicker').value = selectedDate;
-  document.getElementById('datePicker').addEventListener('change', (e) => {
-    selectedDate = e.target.value;
-    renderGrid();
-  });
+  const datePicker = document.getElementById('datePicker');
+  if (datePicker) {
+    datePicker.value = selectedDate;
+    datePicker.addEventListener('change', (e) => {
+      selectedDate = e.target.value;
+      renderGrid();
+    });
+  }
 
   document.addEventListener('mouseup', handleGlobalMouseUp);
 
@@ -48,138 +63,126 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load live data from Supabase
   await loadDataFromSupabase();
 
-  // Synchronize time column scrolling with grid scrolling
+  // Check initial authentication session
+  await checkAuthSession();
+
+  // Synchronize time column scrolling with grid viewport
   const viewport = document.getElementById('gridViewport');
   const timeWrapper = document.getElementById('timeColumnSlots');
-  viewport.addEventListener('scroll', () => {
-    timeWrapper.scrollTop = viewport.scrollTop;
-  });
+  
+  if (viewport && timeWrapper) {
+    viewport.addEventListener('scroll', () => {
+      timeWrapper.scrollTop = viewport.scrollTop;
+    });
+  }
 });
 
-// Place this completely outside of other functions in app.js so it's globally accessible
-async function updateNewPassword() {
-  const newPasswordInput = document.getElementById('newPasswordInput');
-  const newPassword = newPasswordInput ? newPasswordInput.value.trim() : '';
+// ==========================================
+// AUTHENTICATION & SESSION MANAGEMENT
+// ==========================================
+async function checkAuthSession() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session) {
+    handleUserSession(session.user);
+  } else {
+    handleSignedOut();
+  }
 
-  if (!newPassword || newPassword.length < 6) {
-    alert('Password must be at least 6 characters long.');
+  // Unified Auth State Change listener
+  supabaseClient.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      const loggedOutView = document.getElementById('loggedOutView');
+      if (loggedOutView) loggedOutView.style.display = 'flex';
+      toggleAuthMode('update');
+    } else if (session) {
+      handleUserSession(session.user);
+    } else {
+      handleSignedOut();
+    }
+  });
+}
+
+async function handleEmailPasswordLogin() {
+  const emailInput = document.getElementById('loginEmailInput');
+  const passwordInput = document.getElementById('loginPasswordInput');
+  
+  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+  const password = passwordInput ? passwordInput.value : '';
+
+  if (!email || !password) {
+    alert('Please enter both email and password.');
     return;
   }
 
-  const { error } = await supabaseClient.auth.updateUser({
-    password: newPassword
-  });
-
-  if (error) {
-    console.error('Error updating password:', error.message);
-    alert('Failed to update password: ' + error.message);
-  } else {
-    alert('Password successfully updated! You are now logged in.');
-    window.location.href = window.location.origin;
+  if (!email.endsWith(SCHOOL_DOMAIN)) {
+    alert('Access restricted to @sph.ac.id school accounts.');
+    return;
   }
-}
 
-// Load Resources and Bookings from Supabase
-async function loadDataFromSupabase() {
   try {
-    // 1. Fetch Resources
-    const { data: resData, error: resError } = await supabaseClient.from('resources').select('*');
-    if (resError) throw resError;
-    resources = resData || [];
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
 
-    // 2. Fetch Bookings
-    const { data: bookData, error: bookError } = await supabaseClient.from('bookings').select('*');
-    if (bookError) throw bookError;
-    
-    bookings = (bookData || []).map(b => ({
-      id: b.id,
-      resourceId: b.resource_id,
-      date: b.date,
-      title: b.title,
-      user: b.user_name,
-      email: b.user_email,
-      note: b.note, // <--- ADD THIS LINE HERE
-      startSlot: b.start_slot,
-      endSlot: b.end_slot
-    }));
+    if (error) throw error;
 
-    populateResourceSelect();
-    renderGrid();
+    alert('Successfully signed in!');
+    window.location.reload();
   } catch (err) {
-    console.error('Error loading data from Supabase:', err.message);
-    alert('Failed to connect to Supabase database. Check your API credentials.');
+    console.error('Sign-in error:', err.message);
+    alert('Failed to sign in: ' + err.message);
   }
 }
-// Global Role State
-let currentRole = 'user'; // default to standard user
-let currentUserEmail = ''; // track active staff email
 
-function handleRoleChange() {
-  const roleSelect = document.getElementById('userRoleSelect');
-  currentRole = roleSelect.value;
-  
-  // Update UI permissions visually
+async function handleSignOut() {
+  const { error } = await supabaseClient.auth.signOut();
+  if (error) console.error('Error signing out:', error.message);
+}
+
+function handleUserSession(user) {
+  currentUserEmail = user.email;
+
+  if (ADMIN_EMAILS.includes(currentUserEmail.toLowerCase())) {
+    currentRole = 'admin';
+  } else {
+    currentRole = 'user';
+  }
+
+  const loggedOutView = document.getElementById('loggedOutView');
+  if (loggedOutView) loggedOutView.style.display = 'none';
+
+  const loggedInView = document.getElementById('loggedInView');
+  if (loggedInView) loggedInView.style.display = 'flex';
+
+  const displayEmail = document.getElementById('userDisplayEmail');
+  const displayRole = document.getElementById('userDisplayRole');
+  if (displayEmail) displayEmail.innerText = currentUserEmail;
+  if (displayRole) displayRole.innerText = currentRole;
+
   updateRoleUI();
-  // Re-render grid to reflect role-based controls (e.g. edit/delete buttons)
   renderGrid();
 }
 
-function updateRoleUI() {
-  const roleBadge = document.getElementById('userRoleBadge');
-  if (roleBadge) {
-    roleBadge.innerText = currentRole; // Dynamically shows 'admin' or 'user'
-    
-    // Style the badge differently for admins vs users for visual clarity
-    if (currentRole === 'admin') {
-      roleBadge.style.background = '#d4edda';
-      roleBadge.style.color = '#155724';
-    } else {
-      roleBadge.style.background = '#e9ecef';
-      roleBadge.style.color = '#383d41';
-    }
-  }
-
-  // Show/hide admin-only buttons or management tools across the app
-  const adminElements = document.querySelectorAll('.admin-only');
-  adminElements.forEach(el => {
-    el.style.display = (currentRole === 'admin') ? 'block' : 'none';
-  });
-}
-
-function generateTimeLabels() {
-  const container = document.getElementById('timeColumnSlots');
-  container.innerHTML = '';
-
-  for (let i = 0; i < TOTAL_SLOTS; i++) {
-    const totalMins = (START_HOUR * 60) + (i * INTERVAL_MINS);
-    const hour = Math.floor(totalMins / 60);
-    const mins = totalMins % 60;
-    
-    const isHour = mins === 0;
-    const label = document.createElement('div');
-    label.className = `time-slot-label ${isHour ? 'hour-mark' : ''}`;
-    label.innerText = formatTime(hour, mins);
-    container.appendChild(label);
+function handleSignedOut() {
+  const loginView = document.getElementById('loggedOutView');
+  if (loginView) {
+    loginView.style.display = 'flex';
   }
 }
-// List of official admin staff emails
-const ADMIN_EMAILS = [
-  'ian.dermawan@sph.ac.id',
-  'riana.haryanto@sph.ac.id',
-  'ferdinand.christian@sph.ac.id'
-];
 
+// ==========================================
+// PASSWORD RESET & UPDATE
+// ==========================================
 function toggleAuthMode(mode) {
   const loginSec = document.getElementById('authLoginSection');
   const resetSec = document.getElementById('authResetSection');
   const updateSec = document.getElementById('authUpdatePasswordSection');
 
-  // Hide all first
   if (loginSec) loginSec.style.display = 'none';
   if (resetSec) resetSec.style.display = 'none';
   if (updateSec) updateSec.style.display = 'none';
 
-  // Show the requested one
   if (mode === 'reset' && resetSec) {
     resetSec.style.display = 'flex';
   } else if (mode === 'update' && updateSec) {
@@ -213,290 +216,97 @@ async function sendPasswordResetEmail() {
   }
 }
 
-// Verify school domain and determine role
-// Replace your old setRoleFromEmail or session handler check with this:
-async function verifyAndSetUserRole(userEmail) {
-  const emailLower = userEmail.toLowerCase();
+async function updateNewPassword() {
+  const newPasswordInput = document.getElementById('newPasswordInput');
+  const newPassword = newPasswordInput ? newPasswordInput.value.trim() : '';
 
-  // Query Supabase staff_roles table
-  const { data, error } = await supabaseClient
-    .from('staff_roles')
-    .select('role')
-    .eq('email', emailLower)
-    .single();
-
-  if (error || !data) {
-    // Email not found in the school database table!
-    alert("Access Denied: Your email is not registered in the school staff directory.");
-    await supabaseClient.auth.signOut(); // Force log them out
-    return false;
+  if (!newPassword || newPassword.length < 6) {
+    alert('Password must be at least 6 characters long.');
+    return;
   }
 
-  // Set role based on what's stored in the database ('admin' or 'user')
-  currentRole = data.role; 
-  currentUserEmail = userEmail;
+  const { error } = await supabaseClient.auth.updateUser({
+    password: newPassword
+  });
 
-  updateRoleUI();
-  renderGrid();
-  return true;
+  if (error) {
+    console.error('Error updating password:', error.message);
+    alert('Failed to update password: ' + error.message);
+  } else {
+    alert('Password successfully updated! You are now logged in.');
+    window.location.href = window.location.origin;
+  }
 }
 
 // ==========================================
-// AUTHENTICATION & ROLE CONFIGURATION
+// DATA LOADING & GRID RENDERING
 // ==========================================
-const SCHOOL_DOMAIN = '@sph.ac.id'; // Change this to your actual school domain
+async function loadDataFromSupabase() {
+  try {
+    const { data: resData, error: resError } = await supabaseClient.from('resources').select('*');
+    if (resError) throw resError;
+    resources = resData || [];
 
+    const { data: bookData, error: bookError } = await supabaseClient.from('bookings').select('*');
+    if (bookError) throw bookError;
+    
+    bookings = (bookData || []).map(b => ({
+      id: b.id,
+      resourceId: b.resource_id,
+      date: b.date,
+      title: b.title,
+      user: b.user_name,
+      email: b.user_email,
+      note: b.note,
+      startSlot: b.start_slot,
+      endSlot: b.end_slot
+    }));
 
-// Initialize Auth State Listener on Page Load
-document.addEventListener('DOMContentLoaded', () => {
-  checkAuthSession();
-});
+    populateResourceSelect();
+    renderGrid();
+  } catch (err) {
+    console.error('Error loading data from Supabase:', err.message);
+    alert('Failed to connect to Supabase database. Check your API credentials.');
+  }
+}
 
-async function checkAuthSession() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (session) {
-    handleUserSession(session.user);
-  } else {
-    handleSignedOut();
+function updateRoleUI() {
+  const roleBadge = document.getElementById('userRoleBadge');
+  if (roleBadge) {
+    roleBadge.innerText = currentRole;
+    if (currentRole === 'admin') {
+      roleBadge.style.background = '#d4edda';
+      roleBadge.style.color = '#155724';
+    } else {
+      roleBadge.style.background = '#e9ecef';
+      roleBadge.style.color = '#383d41';
+    }
   }
 
-  // Single unified Auth State Change listener
-  supabaseClient.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'PASSWORD_RECOVERY') {
-      const loggedOutView = document.getElementById('loggedOutView');
-      if (loggedOutView) loggedOutView.style.display = 'flex';
-      toggleAuthMode('update');
-    } else if (session) {
-      handleUserSession(session.user);
-    } else {
-      handleSignedOut();
-    }
+  const adminElements = document.querySelectorAll('.admin-only');
+  adminElements.forEach(el => {
+    el.style.display = (currentRole === 'admin') ? 'block' : 'none';
   });
 }
 
+function generateTimeLabels() {
+  const container = document.getElementById('timeColumnSlots');
+  if (!container) return;
+  container.innerHTML = '';
 
-  
-
-async function handleEmailPasswordLogin() {
-  const emailInput = document.getElementById('loginEmailInput');
-  const passwordInput = document.getElementById('loginPasswordInput');
-  
-  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
-  const password = passwordInput ? passwordInput.value : '';
-
-  if (!email || !password) {
-    alert('Please enter both email and password.');
-    return;
-  }
-
-  if (!email.endsWith('@sph.ac.id')) {
-    alert('Access restricted to @sph.ac.id school accounts.');
-    return;
-  }
-
-  try {
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: password,
-    });
-
-    if (error) throw error;
-
-    // Success alert
-    alert('Successfully signed in!');
-
-    // Instantly reload the page. Supabase will read the active session from 
-    // storage, keep the modal closed, and load straight into your calendar grid!
-    window.location.reload();
-
-  } catch (err) {
-    console.error('Sign-in error:', err.message);
-    alert('Failed to sign in: ' + err.message);
+  for (let i = 0; i < TOTAL_SLOTS; i++) {
+    const totalMins = (START_HOUR * 60) + (i * INTERVAL_MINS);
+    const hour = Math.floor(totalMins / 60);
+    const mins = totalMins % 60;
+    
+    const isHour = mins === 0;
+    const label = document.createElement('div');
+    label.className = `time-slot-label ${isHour ? 'hour-mark' : ''}`;
+    label.innerText = formatTime(hour, mins);
+    container.appendChild(label);
   }
 }
 
-// Make sure the word 'async' is right before 'function'
-async function saveBooking() {
-  // 1. Check if user is logged in
-  const { data: { session } } = await supabaseClient.auth.getSession();
-
-  if (!session || !currentUserEmail) {
-    alert("Authentication Required: Please sign in with your school email to book.");
-    return;
-  }
-
-  const bookingId = document.getElementById('bookingId').value;
-  const resourceId = document.getElementById('modalResource').value;
-  const title = document.getElementById('modalTitleInput').value.trim() || 'Untitled Booking';
-  const user = document.getElementById('modalUser').value.trim() || 'Anonymous Staff';
-  const email = currentUserEmail; 
-  const note = document.getElementById('modalNote').value.trim(); // <-- ADD THIS
-  const startSlot = parseInt(document.getElementById('modalStartTime').value);
-  const endSlot = parseInt(document.getElementById('modalEndTime').value);
-  const frequency = document.getElementById('repeatFrequency').value;
-
-  if (startSlot >= endSlot) {
-    alert('End time must be after start time!');
-    return;
-  }
-
-  // Generate list of dates to book
-  let datesToBook = [selectedDate];
-
-  if (frequency !== 'none' && !bookingId) {
-    const endType = document.getElementById('repeatEndType').value;
-    let maxCount = parseInt(document.getElementById('repeatCount').value) || 1;
-    let endDateStr = document.getElementById('repeatEndDate').value;
-    let endDate = endDateStr ? new Date(endDateStr) : null;
-
-    let currentDateObj = new Date(selectedDate);
-    let count = 1;
-
-    while (true) {
-      if (endType === 'count' && count >= maxCount) break;
-
-      // Increment date based on frequency
-      if (frequency === 'daily') {
-        currentDateObj.setDate(currentDateObj.getDate() + 1);
-      } else if (frequency === 'weekly') {
-        currentDateObj.setDate(currentDateObj.getDate() + 7);
-      } else if (frequency === 'monthly') {
-        currentDateObj.setMonth(currentDateObj.getMonth() + 1);
-      }
-
-      let dateString = currentDateObj.toISOString().split('T')[0];
-
-      if (endType === 'date' && endDate && currentDateObj > endDate) {
-        break;
-      }
-
-      // Safety cap to prevent browser freeze (max 100 occurrences)
-      if (count >= 100) break;
-
-      datesToBook.push(dateString);
-      count++;
-    }
-  }
-
-  // Check collisions across all targeted dates
-  for (let d of datesToBook) {
-    const hasCollision = bookings.some(b => {
-      if (bookingId && b.id === bookingId) return false;
-      if (b.resourceId !== resourceId || b.date !== d) return false;
-      return (startSlot < b.endSlot && endSlot > b.startSlot);
-    });
-
-    if (hasCollision) {
-      alert(`Collision detected on ${d}. This space is already booked during that time slot. Recurring booking cancelled.`);
-      return;
-    }
-  }
-
-  try {
-    if (bookingId) {
-      // Single edit mode
-      const { error } = await supabaseClient
-        .from('bookings')
-        .update({
-          resource_id: resourceId,
-          date: selectedDate,
-          title: title,
-          user_name: user,
-          user_email: email,
-          note: note,
-          start_slot: startSlot,
-          end_slot: endSlot
-        })
-        .eq('id', bookingId);
-
-      if (error) throw error;
-      } else {
-      // Bulk insert for recurring bookings
-      const recordsToInsert = datesToBook.map(d => ({
-        resource_id: resourceId,
-        date: d,
-        title: title,
-        user_name: user,
-        user_email: email,
-        note: note,
-        start_slot: startSlot,
-        end_slot: endSlot
-      }));
-
-      const { error } = await supabaseClient
-        .from('bookings')
-        .insert(recordsToInsert);
-
-      if (error) throw error;
-// Send real email via your Vercel backend route
-      try {
-        await fetch('/api/send-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            email: email,
-            title: title,
-            datesCount: datesToBook.length,
-            selectedDate: selectedDate,
-            note: note
-          })
-        });
-      } catch (emailErr) {
-        console.error('Failed to trigger email API:', emailErr);
-      }
-      // 2. Keep local outbox drawer updated for the user UI
-      sendSimulatedEmail(
-        email, 
-        'Booking Confirmation:', 
-        `Successfully booked "${title}, thank you!" for ${datesToBook.length} session(s) starting ${selectedDate}.`
-      );
-    }
-
-    closeBookingModal();
-    await loadDataFromSupabase();
-  } catch (err) {
-    console.error('Error saving recurring bookings:', err.message);
-    alert('Failed to save bookings to database.');
-  }
-}
-
-function handleUserSession(user) {
-  currentUserEmail = user.email;
-
-  // Determine Role based on Admin email list
-  if (ADMIN_EMAILS.includes(currentUserEmail.toLowerCase())) {
-    currentRole = 'admin';
-  } else {
-    currentRole = 'user';
-  }
-
-  // Update UI Views - HIDE the login modal here!
-  const loggedOutView = document.getElementById('loggedOutView');
-  if (loggedOutView) loggedOutView.style.display = 'none'; // <-- FIXED: Set to 'none'
-
-  const loggedInView = document.getElementById('loggedInView');
-  if (loggedInView) loggedInView.style.display = 'flex';
-
-  document.getElementById('userDisplayEmail').innerText = currentUserEmail;
-  document.getElementById('userDisplayRole').innerText = currentRole;
-
-  updateRoleUI();
-  renderGrid();
-}
-
-function handleSignedOut() {
-  const loginView = document.getElementById('loggedOutView');
-  if (loginView) {
-    loginView.style.display = 'flex'; // Must be 'flex' to keep it centered!
-  }
-}
-
-async function handleSignOut() {
-  const { error } = await supabaseClient.auth.signOut();
-  if (error) console.error('Error signing out:', error.message);
-}
 function formatTime(h, m) {
   const period = h >= 12 ? 'PM' : 'AM';
   const displayHour = h % 12 === 0 ? 12 : h % 12;
@@ -513,7 +323,9 @@ function getTimeString(slotIndex) {
 
 function populateResourceSelect() {
   const select = document.getElementById('modalResource');
-  select.innerHTML = resources.map(r => `<option value="${r.id}">${r.name} (${r.type})</option>`).join('');
+  if (select) {
+    select.innerHTML = resources.map(r => `<option value="${r.id}">${r.name} (${r.type})</option>`).join('');
+  }
 }
 
 function populateTimeSelects() {
@@ -525,22 +337,21 @@ function populateTimeSelects() {
     options += `<option value="${i}">${getTimeString(i)}</option>`;
   }
   
-  startSelect.innerHTML = options;
-  endSelect.innerHTML = options;
+  if (startSelect) startSelect.innerHTML = options;
+  if (endSelect) endSelect.innerHTML = options;
 }
-
-
 
 function renderGrid() {
   const viewport = document.getElementById('gridViewport');
-  const typeFilter = document.getElementById('typeFilter').value;
+  const typeFilterEl = document.getElementById('typeFilter');
+  if (!viewport) return;
+
+  const typeFilter = typeFilterEl ? typeFilterEl.value : 'ALL';
   
-  // 1. Filter by dropdown selection
   const filteredResources = typeFilter === 'ALL' 
     ? resources 
     : resources.filter(r => r.type === typeFilter);
 
-  // 2. Sort resources alphabetically by type, then by name
   const sortedResources = [...filteredResources].sort((a, b) => {
     if (a.type !== b.type) {
       return a.type.localeCompare(b.type);
@@ -550,19 +361,15 @@ function renderGrid() {
 
   viewport.innerHTML = '';
 
-  // 3. Loop through sortedResources instead of filteredResources
   sortedResources.forEach(res => {
     const col = document.createElement('div');
     col.className = 'resource-column';
-    // ... rest of your code remains the same
 
-    // Header
     const header = document.createElement('div');
     header.className = 'resource-header';
     header.innerHTML = `<div class="resource-name">${res.name}</div><div class="resource-type">${res.type}</div>`;
     col.appendChild(header);
 
-    // Slots container
     const slotsContainer = document.createElement('div');
     slotsContainer.className = 'grid-slots';
 
@@ -592,7 +399,6 @@ function renderGrid() {
       slotsContainer.appendChild(cell);
     }
 
-    // Render bookings for this resource and date
     const resBookings = bookings.filter(b => b.resourceId === res.id && b.date === selectedDate);
     resBookings.forEach(b => {
       const card = document.createElement('div');
@@ -622,6 +428,9 @@ function renderGrid() {
   });
 }
 
+// ==========================================
+// DRAG & DROP SELECTION
+// ==========================================
 function updateDragUI() {
   if (!isDragging) return;
   const minSlot = Math.min(dragStartSlot, dragCurrentSlot);
@@ -653,6 +462,9 @@ function handleGlobalMouseUp() {
   openBookingModal(dragResourceId, minSlot, maxSlot);
 }
 
+// ==========================================
+// BOOKING MODAL ACTIONS
+// ==========================================
 function openBookingModal(resourceId = null, startSlot = 0, endSlot = null, existingBooking = null) {
   const modal = document.getElementById('bookingModal');
   const headerTitle = document.getElementById('modalHeaderTitle');
@@ -665,32 +477,28 @@ function openBookingModal(resourceId = null, startSlot = 0, endSlot = null, exis
   document.getElementById('modalEndTime').value = endSlot !== null ? Math.min(endSlot, TOTAL_SLOTS) : Math.min(startSlot + 2, TOTAL_SLOTS);
 
   if (existingBooking) {
-    // EDIT MODE
     document.getElementById('bookingId').value = existingBooking.id;
     document.getElementById('modalTitleInput').value = existingBooking.title;
-    document.getElementById('modalUser').value = '';
+    document.getElementById('modalUser').value = existingBooking.user || '';
     document.getElementById('modalEmail').value = existingBooking.email || '';
     document.getElementById('modalNote').value = existingBooking.note || '';
     document.getElementById('modalStartTime').value = existingBooking.startSlot;
     document.getElementById('modalEndTime').value = existingBooking.endSlot;
 
-    // Header & Button texts
     if (headerTitle) headerTitle.innerText = 'Edit Booking Details';
     if (saveBtn) saveBtn.innerText = 'Update Booking';
-    if (deleteBtn) deleteBtn.style.display = 'block'; // Show red Cancel Booking button
+    if (deleteBtn) deleteBtn.style.display = 'block';
     if (repeatContainer) repeatContainer.style.display = 'none';
   } else {
-    // NEW BOOKING MODE
     document.getElementById('bookingId').value = '';
     document.getElementById('modalTitleInput').value = '';
-    document.getElementById('modalUser').value = currentUserEmail ? currentUserEmail.split('@')[0] : '';
+    document.getElementById('modalUser').value = '';
     document.getElementById('modalEmail').value = currentUserEmail || '';
     document.getElementById('modalNote').value = '';
 
-    // Header & Button texts
     if (headerTitle) headerTitle.innerText = 'Book a Space';
     if (saveBtn) saveBtn.innerText = 'Confirm Booking';
-    if (deleteBtn) deleteBtn.style.display = 'none'; // Hide red Cancel Booking button
+    if (deleteBtn) deleteBtn.style.display = 'none';
     if (repeatContainer) repeatContainer.style.display = 'block';
   }
 
@@ -698,19 +506,159 @@ function openBookingModal(resourceId = null, startSlot = 0, endSlot = null, exis
 }
 
 function closeBookingModal() {
-  document.getElementById('bookingModal').classList.remove('active');
+  const modal = document.getElementById('bookingModal');
+  if (modal) modal.classList.remove('active');
 }
 
 function toggleRepeatOptions() {
   const freq = document.getElementById('repeatFrequency').value;
-  const container = document.getElementById('repeatSettingsContainer');
-  container.style.display = freq === 'none' ? 'none' : 'flex';
+  const container = document.getElementById('repeatSubSettings') || document.getElementById('repeatSettingsContainer');
+  if (container) container.style.display = freq === 'none' ? 'none' : 'flex';
 }
 
 function toggleEndType() {
   const endType = document.getElementById('repeatEndType').value;
-  document.getElementById('repeatCountWrapper').style.display = endType === 'count' ? 'block' : 'none';
-  document.getElementById('repeatDateWrapper').style.display = endType === 'date' ? 'block' : 'none';
+  const countWrapper = document.getElementById('repeatCountWrapper');
+  const dateWrapper = document.getElementById('repeatDateWrapper');
+  if (countWrapper) countWrapper.style.display = endType === 'count' ? 'block' : 'none';
+  if (dateWrapper) dateWrapper.style.display = endType === 'date' ? 'block' : 'none';
+}
+
+async function saveBooking() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+
+  if (!session || !currentUserEmail) {
+    alert("Authentication Required: Please sign in with your school email to book.");
+    return;
+  }
+
+  const bookingId = document.getElementById('bookingId').value;
+  const resourceId = document.getElementById('modalResource').value;
+  const title = document.getElementById('modalTitleInput').value.trim() || 'Untitled Booking';
+  const user = document.getElementById('modalUser').value.trim() || currentUserEmail.split('@')[0];
+  const email = currentUserEmail; 
+  const note = document.getElementById('modalNote').value.trim(); 
+  const startSlot = parseInt(document.getElementById('modalStartTime').value);
+  const endSlot = parseInt(document.getElementById('modalEndTime').value);
+  const frequency = document.getElementById('repeatFrequency').value;
+
+  if (startSlot >= endSlot) {
+    alert('End time must be after start time!');
+    return;
+  }
+
+  let datesToBook = [selectedDate];
+
+  if (frequency !== 'none' && !bookingId) {
+    const endType = document.getElementById('repeatEndType').value;
+    let maxCount = parseInt(document.getElementById('repeatCount').value) || 1;
+    let endDateStr = document.getElementById('repeatEndDate').value;
+    let endDate = endDateStr ? new Date(endDateStr) : null;
+
+    let currentDateObj = new Date(selectedDate);
+    let count = 1;
+
+    while (true) {
+      if (endType === 'count' && count >= maxCount) break;
+
+      if (frequency === 'daily') {
+        currentDateObj.setDate(currentDateObj.getDate() + 1);
+      } else if (frequency === 'weekly') {
+        currentDateObj.setDate(currentDateObj.getDate() + 7);
+      } else if (frequency === 'monthly') {
+        currentDateObj.setMonth(currentDateObj.getMonth() + 1);
+      }
+
+      let dateString = currentDateObj.toISOString().split('T')[0];
+
+      if (endType === 'date' && endDate && currentDateObj > endDate) {
+        break;
+      }
+
+      if (count >= 100) break;
+
+      datesToBook.push(dateString);
+      count++;
+    }
+  }
+
+  for (let d of datesToBook) {
+    const hasCollision = bookings.some(b => {
+      if (bookingId && b.id === bookingId) return false;
+      if (b.resourceId !== resourceId || b.date !== d) return false;
+      return (startSlot < b.endSlot && endSlot > b.startSlot);
+    });
+
+    if (hasCollision) {
+      alert(`Collision detected on ${d}. This space is already booked during that time slot. Recurring booking cancelled.`);
+      return;
+    }
+  }
+
+  try {
+    if (bookingId) {
+      const { error } = await supabaseClient
+        .from('bookings')
+        .update({
+          resource_id: resourceId,
+          date: selectedDate,
+          title: title,
+          user_name: user,
+          user_email: email,
+          note: note,
+          start_slot: startSlot,
+          end_slot: endSlot
+        })
+        .eq('id', bookingId);
+
+      if (error) throw error;
+    } else {
+      const recordsToInsert = datesToBook.map(d => ({
+        resource_id: resourceId,
+        date: d,
+        title: title,
+        user_name: user,
+        user_email: email,
+        note: note,
+        start_slot: startSlot,
+        end_slot: endSlot
+      }));
+
+      const { error } = await supabaseClient
+        .from('bookings')
+        .insert(recordsToInsert);
+
+      if (error) throw error;
+
+      try {
+        await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: email,
+            title: title,
+            datesCount: datesToBook.length,
+            selectedDate: selectedDate,
+            note: note
+          })
+        });
+      } catch (emailErr) {
+        console.error('Failed to trigger email API:', emailErr);
+      }
+
+      sendSimulatedEmail(
+        email, 
+        'Booking Confirmation:', 
+        `Successfully booked "${title}" for ${datesToBook.length} session(s) starting ${selectedDate}.`
+      );
+    }
+
+    closeBookingModal();
+    await loadDataFromSupabase();
+  } catch (err) {
+    console.error('Error saving bookings:', err.message);
+    alert('Failed to save bookings to database.');
+  }
 }
 
 async function deleteBooking() {
@@ -720,7 +668,6 @@ async function deleteBooking() {
   const booking = bookings.find(item => item.id === bookingId);
   if (!booking) return;
 
-  // Role Validation Check
   const isOwner = currentUserEmail && (booking.email.toLowerCase() === currentUserEmail.toLowerCase());
   const isAdmin = currentRole === 'admin';
 
@@ -753,15 +700,21 @@ async function deleteBooking() {
   }
 }
 
+// ==========================================
+// SIMULATED EMAIL OUTBOX
+// ==========================================
 function sendSimulatedEmail(to, subject, body) {
   if (!to) return;
   emailOutbox.unshift({ to, subject, body, time: new Date().toLocaleTimeString() });
-  document.getElementById('emailCount').innerText = emailOutbox.length;
+  const countEl = document.getElementById('emailCount');
+  if (countEl) countEl.innerText = emailOutbox.length;
   renderOutbox();
 }
 
 function renderOutbox() {
   const list = document.getElementById('outboxList');
+  if (!list) return;
+
   if (emailOutbox.length === 0) {
     list.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">No emails sent yet.</p>';
     return;
@@ -777,5 +730,6 @@ function renderOutbox() {
 }
 
 function toggleOutbox() {
-  document.getElementById('outboxDrawer').classList.toggle('open');
+  const drawer = document.getElementById('outboxDrawer');
+  if (drawer) drawer.classList.toggle('open');
 }
