@@ -8,7 +8,7 @@
 </head>
 <body>
 
-  <!-- FULL-SCREEN AUTH OVERLAY CONTAINER (Modals for Login, Reset, and New Password) -->
+  <!-- FULL-SCREEN AUTH OVERLAY CONTAINER -->
   <div id="loggedOutView" style="position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(240, 242, 245, 0.95) !important; z-index: 9999 !important; display: flex !important; justify-content: center !important; align-items: center !important;">
     
     <!-- THE LOGIN/RESET CARD -->
@@ -70,15 +70,13 @@
       <div class="date-picker-group">
         <input type="date" id="datePicker">
       </div>
-      <!-- Inside <header> under .controls -->
+
+      <!-- View Toggle Switch -->
       <div class="view-toggle">
         <button id="viewCalendarBtn" class="btn btn-secondary active" onclick="switchView('calendar')">📅 Calendar</button>
         <button id="viewMapBtn" class="btn btn-secondary" onclick="switchView('map')">🗺️ Map View</button>
       </div>
 
-<!-- Inside <div class="schedule-container"> -->
-<div class="grid-viewport" id="gridViewport"></div>
-<div class="map-viewport" id="mapViewport" style="display: none;"></div>
       <div class="filter-group">
         <select id="typeFilter" onchange="renderGrid()">
           <option value="ALL">All Spaces</option>
@@ -100,8 +98,10 @@
 
   </header>
 
+  <!-- MAIN VIEWPORT CONTAINER -->
   <div class="schedule-container">
-  <div class="grid-viewport" id="gridViewport"></div>
+    <div class="grid-viewport" id="gridViewport"></div>
+    <div class="map-viewport" id="mapViewport" style="display: none; width: 100%;"></div>
   </div>
 
   <!-- CLEAN BOOKING MODAL -->
