@@ -153,15 +153,17 @@ input[type="date"] {
   flex: 1;
   overflow: hidden;
   position: relative;
+  min-height: 0; 
 }
 
 .time-column {
-  width: 80px;
+  width: 90px;
   flex-shrink: 0;
   background: var(--bg-surface);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
+  min-height: 0; 
 }
 
 .time-header {
@@ -171,8 +173,10 @@ input[type="date"] {
 }
 
 .time-slots-wrapper {
-  overflow-y: hidden;
+  overflow-y: auto;
   flex: 1;
+  min-height: 0; 
+  scrollbar-width: none; 
 }
 
 .time-slot-label {
@@ -196,6 +200,7 @@ input[type="date"] {
   overflow: auto;
   display: flex;
   position: relative;
+  min-height: 0;
 }
 
 .resource-column {
