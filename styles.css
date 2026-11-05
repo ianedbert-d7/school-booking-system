@@ -162,8 +162,7 @@ input[type="date"] {
   background: var(--bg-surface);
   border-right: 1px solid var(--border-color);
   display: flex;
-  flex-direction: column;
-  min-height: 0; 
+  flex-direction: column; 
 }
 
 .time-header {
@@ -171,13 +170,14 @@ input[type="date"] {
   border-bottom: 1px solid var(--border-color);
   background: #f8fafc;
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .time-slots-wrapper {
-  overflow-y: auto;
-  flex: 1;
-  min-height: 0; 
-  scrollbar-width: none; 
+  height: 1200px;
+  flex-shrink: 0;
 }
 
 .time-slots-wrapper::-webkit-scrollbar {
@@ -206,7 +206,6 @@ input[type="date"] {
   overflow: auto;
   display: flex;
   position: relative;
-  min-height: 0;
 }
 
 .resource-column {
@@ -217,6 +216,7 @@ input[type="date"] {
   flex-direction: column;
   background: white;
   position: relative;
+  min-height: 1257px;
 }
 
 .resource-header {
@@ -231,6 +231,7 @@ input[type="date"] {
   flex-direction: column;
   justify-content: center;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .resource-name {
@@ -245,6 +246,7 @@ input[type="date"] {
 
 .grid-slots {
   position: relative;
+  height: 1200px;
   flex: 1;
 }
 
@@ -485,7 +487,4 @@ input[type="date"] {
   border-bottom: 1px solid #3b82f6;
 }
 
-.time-column {
-  width: 90px; /* Gives extra space for 15-minute timestamp labels */
-}
 
