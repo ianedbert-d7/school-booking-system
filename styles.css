@@ -430,3 +430,136 @@ input[type="date"] {
   padding: 8px;
   border-radius: 4px;
 }
+
+/* Map View Settings */
+
+/* View Switcher Controls */
+.view-toggle {
+  display: flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.view-toggle .btn {
+  border: none;
+  background: transparent;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.view-toggle .btn.active {
+  background: white;
+  color: var(--primary);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  font-weight: 600;
+}
+
+/* Map View Container */
+.map-viewport {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+
+.map-card-wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.map-blueprint-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1000 / 460; /* Matches blueprint ratio */
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Interactive Overlay Cards mapped to Blueprint Coordinates */
+.room-hotspot {
+  position: absolute;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  border: 2px solid #cbd5e1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.room-hotspot:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+/* Status Variations */
+.room-hotspot.available {
+  border-color: #22c55e;
+}
+.room-hotspot.booked {
+  border-color: #ef4444;
+  background: rgba(254, 242, 242, 0.95);
+}
+
+.hotspot-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.hotspot-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot.green { background: #22c55e; }
+.status-dot.red { background: #ef4444; }
+
+/* L3 Specific Positioning Hotspots */
+.hotspot-small-meeting { top: 12%; left: 21%; width: 9%; height: 26%; }
+.hotspot-collab-space  { top: 4%;  left: 31%; width: 24%; height: 38%; }
+.hotspot-meeting-room  { top: 42%; left: 25%; width: 8%; height: 22%; }
+.hotspot-mpr           { top: 4%;  left: 77%; width: 21%; height: 90%; }
+/* L4 Specific Positioning Hotspots */
+.hotspot-big-gym        { top: 22%; left: 39%; width: 23%; height: 28%; }
+.hotspot-l-gym          { top: 56%; left: 59%; width: 38%; height: 24%; }
+.hotspot-makerspace     { top: 88%; left: 63%; width: 14%; height: 11%; }
+.hotspot-canteen        { top: 88%; left: 79%; width: 10%; height: 11%; }
+.hotspot-glass-big      { top: 68%; left: 2%;  width: 14%; height: 13%; }
+.hotspot-glass-studio   { top: 84%; left: 2%;  width: 14%; height: 13%; }

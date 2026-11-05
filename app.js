@@ -714,3 +714,145 @@ function toggleOutbox() {
   const drawer = document.getElementById('outboxDrawer');
   if (drawer) drawer.classList.toggle('open');
 }
+
+let currentView = 'calendar'; // 'calendar' | 'map'
+
+function switchView(view) {
+  currentView = view;
+  
+  const calendarView = document.getElementById('gridViewport');
+  const mapView = document.getElementById('mapViewport');
+  const calBtn = document.getElementById('viewCalendarBtn');
+  const mapBtn = document.getElementById('viewMapBtn');
+
+  if (view === 'calendar') {
+    calendarView.style.display = 'block';
+    mapView.style.display = 'none';
+    calBtn.classList.add('active');
+    mapBtn.classList.remove('active');
+    renderGrid();
+  } else {
+    calendarView.style.display = 'none';
+    mapView.style.display = 'block';
+    mapBtn.classList.add('active');
+    calBtn.classList.remove('active');
+    renderMapView();
+  }
+}
+
+function renderMapView() {
+  const mapViewport = document.getElementById('mapViewport');
+  if (!mapViewport) return;
+
+  // Level 3 Rooms
+  const l3Rooms = [
+    { name: "Small Meeting Room", cssClass: "hotspot-small-meeting", id: "small-meeting" },
+    { name: "Collab Space",        cssClass: "hotspot-collab-space",  id: "collab-space" },
+    { name: "Meeting Room",        cssClass: "hotspot-meeting-room",  id: "meeting-room" },
+    { name: "MPR",                 cssClass: "hotspot-mpr",           id: "mpr" }
+  ];
+
+  // Level 4 Rooms based on your layout instructions
+  const l4Rooms = [
+    { name: "Big Gym",             cssClass: "hotspot-big-gym",       id: "big-gym" },
+    { name: "L Gym",               cssClass: "hotspot-l-gym",         id: "l-gym" },
+    { name: "Makerspace / JS Lab", cssClass: "hotspot-makerspace",    id: "makerspace" },
+    { name: "Canteen",             cssClass: "hotspot-canteen",       id: "canteen" },
+    { name: "Glass House (Big)",   cssClass: "hotspot-glass-big",     id: "glass-house-big" },
+    { name: "Glass House (Studio)",cssClass: "hotspot-glass-studio",  id: "glass-house-studio" }
+  ];
+
+  let html = `
+    <div class="map-card-wrapper" style="margin-bottom: 24px;">
+      <div class="map-header">
+        <h2>Level 3 (L3) Facility Map</h2>
+        <span class="text-muted" style="font-size: 0.85rem;">Click any room to view or book time slots</span>
+      </div>
+      <div class="map-blueprint-container" style="background-image: url('assets/l3-blueprint.jpg');">
+  `;
+
+  l3Rooms.forEach(room => {
+    const resData = resources.find(r => r.name.toLowerCase() === room.name.toLowerCase());
+    const isBooked = checkIsCurrentlyBooked(resData ? resData.id : null);
+
+    html += `
+      <div class="room-hotspot ${room.cssClass} ${isBooked ? 'booked' : 'available'}" 
+           onclick="openRoomQuickBook('${resData ? resData.id : ''}', '${room.name}')">
+        <div class="hotspot-title">${room.name}</div>
+        <div class="hotspot-status">
+          <span class="status-dot ${isBooked ? 'red' : 'green'}"></span>
+          ${isBooked ? 'Booked' : 'Available'}
+        </div>
+      </div>
+    `;
+  });
+
+  html += `
+      </div>
+    </div>
+
+    <div class="map-card-wrapper">
+      <div class="map-header">
+        <h2>Level 4 (L4) Facility Map</h2>
+        <span class="text-muted" style="font-size: 0.85rem;">Click any room to view or book time slots</span>
+      </div>
+      <div class="map-blueprint-container" style="background-image: url('assets/l4-blueprint.jpg');">
+  `;
+
+  l4Rooms.forEach(room => {
+    const resData = resources.find(r => r.name.toLowerCase() === room.name.toLowerCase());
+    const isBooked = checkIsCurrentlyBooked(resData ? resData.id : null);
+
+    html += `
+      <div class="room-hotspot ${room.cssClass} ${isBooked ? 'booked' : 'available'}" 
+           onclick="openRoomQuickBook('${resData ? resData.id : ''}', '${room.name}')">
+        <div class="hotspot-title">${room.name}</div>
+        <div class="hotspot-status">
+          <span class="status-dot ${isBooked ? 'red' : 'green'}"></span>
+          ${isBooked ? 'Booked' : 'Available'}
+        </div>
+      </div>
+    `;
+  });
+
+  html += `
+      </div>
+    </div>
+  `;
+
+  mapViewport.innerHTML = html;
+}
+
+// Helper to check live booking status against current time/date
+function checkIsCurrentlyBooked(resourceId) {
+  if (!resourceId || !bookings) return false;
+  
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const selectedDate = document.getElementById('datePicker')?.value || todayStr;
+
+  if (selectedDate !== todayStr) return false;
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  return bookings.some(b => {
+    if (b.resource_id !== resourceId || b.booking_date !== todayStr) return false;
+    const startMins = parseTimeToMinutes(b.start_time);
+    const endMins = parseTimeToMinutes(b.end_time);
+    return currentMinutes >= startMins && currentMinutes < endMins;
+  });
+}
+
+function parseTimeToMinutes(timeStr) {
+  if (!timeStr) return 0;
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function openRoomQuickBook(resourceId, roomName) {
+  // Opens your existing booking modal with the room pre-selected!
+  const modal = document.getElementById('bookingModal');
+  const resSelect = document.getElementById('modalResourceSelect');
+  if (resSelect && resourceId) resSelect.value = resourceId;
+  if (modal) modal.classList.add('active');
+}

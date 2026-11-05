@@ -70,7 +70,15 @@
       <div class="date-picker-group">
         <input type="date" id="datePicker">
       </div>
+      <!-- Inside <header> under .controls -->
+      <div class="view-toggle">
+        <button id="viewCalendarBtn" class="btn btn-secondary active" onclick="switchView('calendar')">📅 Calendar</button>
+        <button id="viewMapBtn" class="btn btn-secondary" onclick="switchView('map')">🗺️ Map View</button>
+      </div>
 
+<!-- Inside <div class="schedule-container"> -->
+<div class="grid-viewport" id="gridViewport"></div>
+<div class="map-viewport" id="mapViewport" style="display: none;"></div>
       <div class="filter-group">
         <select id="typeFilter" onchange="renderGrid()">
           <option value="ALL">All Spaces</option>
