@@ -752,7 +752,7 @@ function renderMapView() {
     { name: "MPR",                 cssClass: "hotspot-mpr",           id: "mpr" }
   ];
 
-  // Level 4 Rooms based on your layout instructions
+  // Level 4 Rooms
   const l4Rooms = [
     { name: "Big Gym",             cssClass: "hotspot-big-gym",       id: "big-gym" },
     { name: "L Gym",               cssClass: "hotspot-l-gym",         id: "l-gym" },
@@ -762,23 +762,22 @@ function renderMapView() {
     { name: "Glass House (Studio)",cssClass: "hotspot-glass-studio",  id: "glass-house-studio", isCompact: true }
   ];
 
-  html += `
-      <div class="room-hotspot ${room.cssClass} ${room.isCompact ? 'compact-hotspot' : ''} ${isBooked ? 'booked' : 'available'}" 
-           onclick="openRoomQuickBook('${resData ? resData.id : ''}', '${room.name}')">
-        <div class="hotspot-title">${room.name}</div>
-        <div class="hotspot-status">
-          <span class="status-dot ${isBooked ? 'red' : 'green'}"></span>
-          ${isBooked ? 'Booked' : 'Available'}
-        </div>
+  // Initialize the html variable here!
+  let html = `
+    <div class="map-card-wrapper" style="margin-bottom: 24px;">
+      <div class="map-header">
+        <h2>Level 3 (L3) Facility Map</h2>
+        <span class="text-muted" style="font-size: 0.85rem;">Click any room to view or book time slots</span>
       </div>
-    `;
+      <div class="map-blueprint-container" style="background-image: url('assets/l3-blueprint.jpg');">
+  `;
 
   l3Rooms.forEach(room => {
     const resData = resources.find(r => r.name.toLowerCase() === room.name.toLowerCase());
     const isBooked = checkIsCurrentlyBooked(resData ? resData.id : null);
 
     html += `
-      <div class="room-hotspot ${room.cssClass} ${isBooked ? 'booked' : 'available'}" 
+      <div class="room-hotspot ${room.cssClass} ${room.isCompact ? 'compact-hotspot' : ''} ${isBooked ? 'booked' : 'available'}" 
            onclick="openRoomQuickBook('${resData ? resData.id : ''}', '${room.name}')">
         <div class="hotspot-title">${room.name}</div>
         <div class="hotspot-status">
@@ -806,7 +805,7 @@ function renderMapView() {
     const isBooked = checkIsCurrentlyBooked(resData ? resData.id : null);
 
     html += `
-      <div class="room-hotspot ${room.cssClass} ${isBooked ? 'booked' : 'available'}" 
+      <div class="room-hotspot ${room.cssClass} ${room.isCompact ? 'compact-hotspot' : ''} ${isBooked ? 'booked' : 'available'}" 
            onclick="openRoomQuickBook('${resData ? resData.id : ''}', '${room.name}')">
         <div class="hotspot-title">${room.name}</div>
         <div class="hotspot-status">
